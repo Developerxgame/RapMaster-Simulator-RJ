@@ -18,7 +18,7 @@ const SkillsScreen: React.FC = () => {
     const { player } = state;
 
     const handleTrain = (skill: SkillName) => {
-        const energyCost = 10;
+        const energyCost = 20;
         const currentLevel = player.skills[skill];
         
         if(player.stats.energy >= energyCost && currentLevel < 100){
@@ -35,7 +35,7 @@ const SkillsScreen: React.FC = () => {
                 {(Object.keys(skillInfo) as SkillName[]).map(skillKey => {
                     const skill = skillInfo[skillKey];
                     const level = player.skills[skillKey];
-                    const energyCost = 10;
+                    const energyCost = 20;
 
                     return (
                         <div key={skillKey} className="bg-ios-bg-secondary p-4 rounded-xl">

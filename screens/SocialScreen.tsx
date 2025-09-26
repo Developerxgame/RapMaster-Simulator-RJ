@@ -20,11 +20,46 @@ const formatRelativeTime = (timestamp: number) => {
     return "just now";
 };
 
+const coverArtUrls = [
+    'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1619983081593-e22f5899fa24?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1614999092404-500a68605c31?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1581333107534-13783c587428?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1542353436-312f0e16aa8e?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1508700115892-454a252dc065?q=80&w=800&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1586156693842-0f357b545b63?q=80&w=800&auto=format&fit=crop'
+];
+
+const simpleHash = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+};
+
+const getThematicUrl = (id: string) => {
+    const index = simpleHash(id) % coverArtUrls.length;
+    return coverArtUrls[index];
+};
+
 
 type SocialTab = 'rapgram' | 'rapify' | 'raptube';
 
+const promotions = {
+    basic: { name: "Basic", cost: 1000, levelReq: 1, desc: "Small boost to streams and views." },
+    medium: { name: "Medium", cost: 5000, levelReq: 2, desc: "Moderate boost, wider reach." },
+    advanced: { name: "Advanced", cost: 20000, levelReq: 3, desc: "High boost, targets key demographics." },
+    premium: { name: "Premium", cost: 100000, levelReq: 4, desc: "Massive boost, guaranteed viral potential." },
+}
+
 const SocialScreen: React.FC = () => {
     const [activeTab, setActiveTab] = useState<SocialTab>('rapgram');
+    const [promoModal, setPromoModal] = useState<{release: Track | Album | MusicVideo, type: 'track' | 'album' | 'mv'} | null>(null);
+
 
     const TabButton: React.FC<{tab: SocialTab, label: string, icon: React.ReactNode}> = ({tab, label, icon}) => (
         <button onClick={() => setActiveTab(tab)} className={`flex-1 flex justify-center items-center space-x-2 py-3 text-sm font-semibold rounded-t-lg transition-colors ${activeTab === tab ? 'bg-ios-bg-secondary text-ios-blue' : 'bg-transparent text-ios-label-secondary'}`}>
@@ -44,8 +79,9 @@ const SocialScreen: React.FC = () => {
             </div>
             
             {activeTab === 'rapgram' && <RapGramTab />}
-            {activeTab === 'rapify' && <RapifyTab />}
-            {activeTab === 'raptube' && <RapTubeTab />}
+            {activeTab === 'rapify' && <RapifyTab onPromote={setPromoModal} />}
+            {activeTab === 'raptube' && <RapTubeTab onPromote={setPromoModal} />}
+            {promoModal && <PromotionModal releaseInfo={promoModal} onClose={() => setPromoModal(null)} />}
         </div>
     );
 };
@@ -60,7 +96,7 @@ const RapGramTab = () => {
         if (isPosting) {
             setIsPosting(false);
         }
-    }, [socialFeed.length]);
+    }, [socialFeed.length, isPosting]);
     
     const handlePost = () => {
         if (player.stats.energy >= energyCostForPost && !isPosting) {
@@ -133,33 +169,69 @@ const RapGramTab = () => {
     );
 }
 
-const PromotionButton: React.FC<{release: Track | Album | MusicVideo, type: 'track' | 'album' | 'mv'}> = ({ release, type }) => {
+const PromotionModal: React.FC<{
+    releaseInfo: { release: Track | Album | MusicVideo; type: 'track' | 'album' | 'mv' };
+    onClose: () => void;
+}> = ({ releaseInfo, onClose }) => {
     const { state, dispatch } = useGame();
-    const cost = Math.floor(100 + release.revenue * 0.1);
+    const { release, type } = releaseInfo;
 
-    const handlePromote = () => {
-        if(state.player.stats.netWorth >= cost && !release.promotion.isActive){
-            dispatch({type: ActionType.PROMOTE_RELEASE, payload: {releaseId: release.id, type, cost}})
+    const handlePromote = (tier: 'basic' | 'medium' | 'advanced' | 'premium', cost: number) => {
+        if (state.player.stats.netWorth >= cost) {
+            dispatch({ type: ActionType.PROMOTE_RELEASE, payload: { releaseId: release.id, type, tier, cost } });
+            onClose();
         }
-    }
+    };
 
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-ios-bg-secondary rounded-2xl p-4 w-full max-w-sm mx-auto shadow-lg border border-gray-700 space-y-3">
+                <h2 className="text-xl font-bold text-center">Promote "{'title' in release ? release.title : release.trackTitle}"</h2>
+                <div className="space-y-2">
+                    {(Object.keys(promotions) as Array<keyof typeof promotions>).map(tier => {
+                        const promo = promotions[tier];
+                        const isUnlocked = state.player.careerLevel >= promo.levelReq;
+                        const canAfford = state.player.stats.netWorth >= promo.cost;
+                        return (
+                            <button
+                                key={tier}
+                                onClick={() => handlePromote(tier, promo.cost)}
+                                disabled={!isUnlocked || !canAfford}
+                                className="w-full text-left p-3 bg-black rounded-lg disabled:opacity-50"
+                            >
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold">{promo.name}</span>
+                                    <span className={`font-semibold ${canAfford ? 'text-ios-green' : 'text-ios-red'}`}>${promo.cost.toLocaleString()}</span>
+                                </div>
+                                <p className="text-xs text-ios-label-secondary">{promo.desc}</p>
+                                {!isUnlocked && <p className="text-xs text-ios-red mt-1">Requires Career Level {promo.levelReq}</p>}
+                            </button>
+                        );
+                    })}
+                </div>
+                <button onClick={onClose} className="w-full py-3 bg-ios-gray text-white font-semibold rounded-lg mt-2">Cancel</button>
+            </div>
+        </div>
+    );
+};
+
+const PromotionDisplay: React.FC<{release: Track | Album | MusicVideo, type: 'track' | 'album' | 'mv', onPromote: (info: any) => void}> = ({ release, type, onPromote }) => {
     if(release.promotion.isActive){
-        return <p className="text-sm text-center text-ios-green font-semibold">Promotion Active ({release.promotion.weeksLeft}w left)</p>
+        return <p className="text-sm text-center text-ios-green font-semibold mt-2">Promotion Active ({release.promotion.weeksLeft}w left)</p>
     }
 
     return (
-        <button onClick={handlePromote} disabled={state.player.stats.netWorth < cost} className="w-full py-2 mt-2 flex items-center justify-center space-x-2 bg-purple-600 text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray transition-colors">
+        <button onClick={() => onPromote({release, type})} className="w-full py-2 mt-2 flex items-center justify-center space-x-2 bg-purple-600 text-white font-bold rounded-lg shadow-md transition-colors">
             <MegaphoneIcon className="w-5 h-5" />
-            <span>Promote (${cost.toLocaleString()})</span>
+            <span>Promote</span>
         </button>
     )
 }
 
-const RapifyTab = () => {
+const RapifyTab: React.FC<{onPromote: (info: any) => void}> = ({ onPromote }) => {
     const { state } = useGame();
     const { discography } = state;
     const releasedSingles = discography.tracks.filter(t => t.isReleased && !t.albumId);
-    const getCoverArtUrl = (id: string) => `https://picsum.photos/seed/${id}/200`;
 
     return (
         <div className="space-y-6">
@@ -169,14 +241,14 @@ const RapifyTab = () => {
                     {discography.albums.length > 0 ? discography.albums.slice().reverse().map(album => (
                         <div key={album.id} className="bg-black p-3 rounded-lg">
                             <div className="flex items-center space-x-4">
-                                <img src={getCoverArtUrl(album.id)} alt={album.title} className="w-16 h-16 rounded-md object-cover" />
+                                <img src={getThematicUrl(album.id)} alt={album.title} className="w-16 h-16 rounded-md object-cover" />
                                 <div className="flex-grow">
                                     <p className="font-semibold text-base">{album.title}</p>
                                     <p className="text-sm text-ios-label-secondary">Sales: {album.sales.toLocaleString()}</p>
                                     <p className="text-sm text-ios-green flex items-center space-x-1"><CashIcon className="w-4 h-4" /><span>${album.revenue.toLocaleString()}</span></p>
                                 </div>
                             </div>
-                            <PromotionButton release={album} type="album" />
+                            <PromotionDisplay release={album} type="album" onPromote={onPromote} />
                         </div>
                     )) : <p className="text-ios-label-secondary text-center py-4">No albums released yet.</p>}
                 </div>
@@ -187,14 +259,14 @@ const RapifyTab = () => {
                     {releasedSingles.length > 0 ? releasedSingles.slice().reverse().map(track => (
                         <div key={track.id} className="bg-black p-3 rounded-lg">
                             <div className="flex items-center space-x-4">
-                                <img src={getCoverArtUrl(track.id)} alt={track.title} className="w-16 h-16 rounded-md object-cover" />
+                                <img src={getThematicUrl(track.id)} alt={track.title} className="w-16 h-16 rounded-md object-cover" />
                                 <div>
                                     <p className="font-semibold text-base">{track.title}</p>
                                     <p className="text-sm text-ios-label-secondary">Streams: {track.streams.toLocaleString()}</p>
                                     <p className="text-sm text-ios-green flex items-center space-x-1"><CashIcon className="w-4 h-4" /><span>${track.revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
                                 </div>
                             </div>
-                            <PromotionButton release={track} type="track" />
+                            <PromotionDisplay release={track} type="track" onPromote={onPromote} />
                         </div>
                     )) : <p className="text-ios-label-secondary text-center py-4">No singles released yet.</p>}
                 </div>
@@ -203,10 +275,9 @@ const RapifyTab = () => {
     );
 }
 
-const RapTubeTab = () => {
+const RapTubeTab: React.FC<{onPromote: (info: any) => void}> = ({ onPromote }) => {
     const { state } = useGame();
     const { discography } = state;
-    const getThumbnailUrl = (id: string) => `https://picsum.photos/seed/${id}/400/225`;
 
     return (
          <div className="bg-ios-bg-secondary p-4 rounded-xl">
@@ -217,7 +288,7 @@ const RapTubeTab = () => {
                         {discography.musicVideos.slice().reverse().map(mv => (
                             <div key={mv.id} className="space-y-2 bg-black p-3 rounded-lg">
                                 <div className="relative">
-                                    <img src={getThumbnailUrl(mv.id)} alt={mv.trackTitle} className="w-full aspect-video rounded-lg object-cover" />
+                                    <img src={getThematicUrl(mv.id)} alt={mv.trackTitle} className="w-full aspect-video rounded-lg object-cover" />
                                     <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
                                         <PlayIcon className="w-10 h-10 text-white opacity-80" />
                                     </div>
@@ -227,7 +298,7 @@ const RapTubeTab = () => {
                                     <p className="text-xs text-ios-label-secondary">Views: {mv.views.toLocaleString()} • Quality: {mv.quality}</p>
                                     <p className="text-sm text-ios-green flex items-center space-x-1"><CashIcon className="w-4 h-4" /><span>${mv.revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
                                 </div>
-                                <PromotionButton release={mv} type="mv" />
+                                <PromotionDisplay release={mv} type="mv" onPromote={onPromote} />
                             </div>
                         ))}
                     </div>

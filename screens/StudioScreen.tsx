@@ -95,15 +95,15 @@ const StudioScreen: React.FC = () => {
 
     const handleCreateAlbum = () => {
         const cost = releaseType === 'premium' ? premiumAlbumCost : 0;
-        if (!albumTitle.trim() || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || player.stats.energy < 60 || player.stats.netWorth < cost) return;
-        dispatch({ type: ActionType.CREATE_ALBUM, payload: { title: albumTitle, trackIds: selectedTrackIds, energyCost: 60, releaseType, cost } });
+        if (!albumTitle.trim() || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || player.stats.energy < 70 || player.stats.netWorth < cost) return;
+        dispatch({ type: ActionType.CREATE_ALBUM, payload: { title: albumTitle, trackIds: selectedTrackIds, energyCost: 70, releaseType, cost } });
         setAlbumTitle('');
         setSelectedTrackIds([]);
         setReleaseType('default');
     };
     
     const handleCreateMV = () => {
-        if (!selectedTrackForMV || player.stats.energy < 40) return;
+        if (!selectedTrackForMV || player.stats.energy < 50) return;
         const track = releasedTracks.find(t => t.id === selectedTrackForMV);
         if (!track) return;
         
@@ -112,7 +112,7 @@ const StudioScreen: React.FC = () => {
         if (player.stats.netWorth < cost) return;
 
         const mvTitle = `${track.title} - Official Music Video`;
-        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: mvTitle, energyCost: 40, agency, cost } });
+        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: mvTitle, energyCost: 50, agency, cost } });
         setSelectedTrackForMV('');
     };
     
@@ -214,7 +214,7 @@ const StudioScreen: React.FC = () => {
                 <div className="space-y-4">
                     <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-4">
                         <h2 className="text-xl font-semibold">Compile an Album</h2>
-                        <p className="text-sm text-ios-label-secondary">Costs 60 Energy ⚡. Requires 3-10 tracks.</p>
+                        <p className="text-sm text-ios-label-secondary">Costs 70 Energy ⚡. Requires 3-10 tracks.</p>
                         <input type="text" value={albumTitle} onChange={e => setAlbumTitle(e.target.value)} placeholder="Album Title" className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700"/>
                         
                         <div>
@@ -241,7 +241,7 @@ const StudioScreen: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 60 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || (releaseType === 'premium' && player.stats.netWorth < premiumAlbumCost)} className="w-full py-4 text-lg bg-ios-green text-black font-bold rounded-xl shadow-md disabled:bg-ios-gray">
+                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 70 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || (releaseType === 'premium' && player.stats.netWorth < premiumAlbumCost)} className="w-full py-4 text-lg bg-ios-green text-black font-bold rounded-xl shadow-md disabled:bg-ios-gray">
                             Release Album
                         </button>
                     </div>
@@ -263,7 +263,7 @@ const StudioScreen: React.FC = () => {
                 <div className="space-y-4">
                     <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-4">
                         <h2 className="text-xl font-semibold">Shoot a Music Video</h2>
-                        <p className="text-sm text-ios-label-secondary">Costs 40 Energy ⚡. Boosts fame significantly.</p>
+                        <p className="text-sm text-ios-label-secondary">Costs 50 Energy ⚡. Boosts fame significantly.</p>
                         <select value={selectedTrackForMV} onChange={e => setSelectedTrackForMV(e.target.value)} className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700">
                             <option value="">Select a Released Track</option>
                             {releasedTracks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
@@ -288,7 +288,7 @@ const StudioScreen: React.FC = () => {
                             </div>
                         </div>
 
-                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 40 || player.stats.netWorth < agencyOptions[selectedAgency].cost} className="w-full py-4 text-lg bg-ios-red text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray">
+                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 50 || player.stats.netWorth < agencyOptions[selectedAgency].cost} className="w-full py-4 text-lg bg-ios-red text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray">
                             Shoot Video
                         </button>
                     </div>

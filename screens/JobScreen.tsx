@@ -4,13 +4,13 @@ import { ActionType } from '../types';
 import { CashIcon, LightningBoltIcon, StarIcon } from '../components/Icons';
 
 const jobs = [
-    { name: 'Fast Food', money: 50, energyCost: 20, fameGain: 1, requiredFame: 0 },
-    { name: 'Delivery Driver', money: 80, energyCost: 25, fameGain: 2, requiredFame: 50 },
-    { name: 'Retail', money: 120, energyCost: 30, fameGain: 3, requiredFame: 100 },
-    { name: 'Bartender', money: 200, energyCost: 35, fameGain: 10, requiredFame: 500 },
-    { name: 'DJ', money: 350, energyCost: 40, fameGain: 25, requiredFame: 1000 },
-    { name: 'Studio Assistant', money: 500, energyCost: 40, fameGain: 50, requiredFame: 2500 },
-    { name: 'Ghostwriter', money: 1000, energyCost: 50, fameGain: 100, requiredFame: 5000 },
+    { name: 'Fast Food', money: 50, energyCost: 20, fameGain: 0, requiredFame: 0 },
+    { name: 'Delivery Driver', money: 80, energyCost: 25, fameGain: 0, requiredFame: 5 },
+    { name: 'Retail', money: 120, energyCost: 30, fameGain: 0, requiredFame: 10 },
+    { name: 'Bartender', money: 200, energyCost: 35, fameGain: 1, requiredFame: 20 },
+    { name: 'DJ', money: 350, energyCost: 40, fameGain: 2, requiredFame: 40 },
+    { name: 'Studio Assistant', money: 500, energyCost: 40, fameGain: 3, requiredFame: 60 },
+    { name: 'Ghostwriter', money: 1000, energyCost: 50, fameGain: 5, requiredFame: 80 },
 ];
 
 const JobScreen: React.FC = () => {

@@ -3,7 +3,6 @@ import { GameState, GameAction, ActionType, GameStatus, Player, Track, Album, Mu
 import { shopItems } from '../screens/ShopScreen'; 
 
 const MAX_ENERGY = 100;
-const FANS_PER_FAME_POINT = 10;
 const SINGLE_STREAM_RATE = 0.20;
 const ALBUM_STREAM_RATE = 0.50;
 const MV_VIEWS_INCOME_RATE = 0.30; 
@@ -13,14 +12,43 @@ const MV_VIEWS_FACTOR = 1.2;
 const END_YEAR = 2060;
 const EVENT_CHANCE_PER_WEEK = 0.25;
 
+const MAX_FAME = 100;
+const MAX_REPUTATION = 100;
+
+export const XP_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 999999]; // XP needed to reach level 1, 2, 3, 4, 5
+const LEVEL_MULTIPLIERS = [
+    { level: 1, fameRep: 1, streamsViews: 1, sales: 1 },
+    { level: 2, fameRep: 1.1, streamsViews: 1.2, sales: 1.1 },
+    { level: 3, fameRep: 1.2, streamsViews: 1.5, sales: 1.3 },
+    { level: 4, fameRep: 1.3, streamsViews: 1.8, sales: 1.5 },
+    { level: 5, fameRep: 1.5, streamsViews: 2, sales: 2 },
+];
+const DECAY_RATES = [0.20, 0.16, 0.12, 0.10, 0.08]; // Decay rate for level 1, 2, 3, 4, 5
+
+const XP_GAINS = {
+    TRACK_RELEASE: 100,
+    ALBUM_RELEASE: 300,
+    MV_RELEASE: 200,
+    SOCIAL_POST: 10,
+    PROMOTION: 50,
+};
+
+const PROMOTION_MULTIPLIERS = {
+    basic: 1.1,
+    medium: 1.3,
+    advanced: 1.5,
+    premium: 2.0
+};
+
+
 const gameEvents: GameEvent[] = [
     {
         id: 'event1',
         title: "Surprise Interview",
         description: "A popular hip-hop blog wants to interview you. This could be a big break, but it will take up your time.",
         choices: [
-            { text: "Do the interview (-15 Energy)", effects: { fame: 50, energy: -15, log: "The interview was a success! Gained 50 fame." } },
-            { text: "Decline politely", effects: { reputation: 5, log: "You declined the interview to focus on music. +5 Reputation." } },
+            { text: "Do the interview (-15 Energy)", effects: { fame: 5, energy: -15, log: "The interview was a success! Gained 5 fame." } },
+            { text: "Decline politely", effects: { reputation: 1, log: "You declined the interview to focus on music. +1 Reputation." } },
         ]
     },
     {
@@ -28,8 +56,8 @@ const gameEvents: GameEvent[] = [
         title: "Fan Encounter",
         description: "You run into a group of dedicated fans on the street. They ask for a picture.",
         choices: [
-            { text: "Take the picture (+10 Fame)", effects: { fame: 10, log: "Your fans loved the interaction! +10 Fame." } },
-            { text: "Pretend you're busy (-5 Reputation)", effects: { reputation: -5, log: "You ignored your fans. That's not a good look. -5 Reputation." } },
+            { text: "Take the picture (+2 Fame)", effects: { fame: 2, log: "Your fans loved the interaction! +2 Fame." } },
+            { text: "Pretend you're busy (-1 Reputation)", effects: { reputation: -1, log: "You ignored your fans. That's not a good look. -1 Reputation." } },
         ]
     },
     {
@@ -37,10 +65,21 @@ const gameEvents: GameEvent[] = [
         title: "Collaboration Offer",
         description: "A slightly more famous local artist wants you to feature on their track.",
         choices: [
-            { text: "Accept (-$500, +100 Fame)", effects: { netWorth: -500, fame: 100, log: "The collab was a hit! Gained 100 fame." } },
+            { text: "Accept (-$500, +10 Fame)", effects: { netWorth: -500, fame: 10, log: "The collab was a hit! Gained 10 fame." } },
             { text: "Decline", effects: { log: "You decided to focus on your own work." } },
         ]
     }
+];
+
+const rapGramImageUrls = [
+    'https://images.unsplash.com/photo-1590602843623-3f1819c3c0a4?q=80&w=800&auto=format&fit=crop', // Studio mic
+    'https://images.unsplash.com/photo-1608229245345-356103f53940?q=80&w=800&auto=format&fit=crop', // Soundboard
+    'https://images.unsplash.com/photo-1526478815-5415c5457053?q=80&w=800&auto=format&fit=crop', // Rapper on stage
+    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=800&auto=format&fit=crop', // Luxury car
+    'https://images.unsplash.com/photo-1611652033959-8a3d596414b8?q=80&w=800&auto=format&fit=crop', // Gold chain
+    'https://images.unsplash.com/photo-1519750783826-e2420f4d687f?q=80&w=800&auto=format&fit=crop', // City night
+    'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?q=80&w=800&auto=format&fit=crop', // Concert
+    'https://images.unsplash.com/photo-1484981138541-3d074aa97328?q=80&w=800&auto=format&fit=crop', // Writing lyrics
 ];
 
 
@@ -67,7 +106,9 @@ const initialState: GameState = {
         mic: 0,
         audio: 0,
         software: 0,
-    }
+    },
+    careerLevel: 1,
+    careerXp: 0,
   },
   gameDate: {
     year: 2020,
@@ -82,6 +123,26 @@ const initialState: GameState = {
   history: {},
   socialFeed: [],
   activeEvent: null,
+  weeksSinceLastRelease: 0,
+};
+
+const addXp = (state: GameState, amount: number): GameState => {
+    const newXp = state.player.careerXp + amount;
+    const currentLevel = state.player.careerLevel;
+    const nextLevelThreshold = XP_THRESHOLDS[currentLevel];
+    let newLevel = currentLevel;
+    let newLog = [...state.log, `Gained ${amount} XP.`];
+
+    if (currentLevel < LEVEL_MULTIPLIERS.length && newXp >= nextLevelThreshold) {
+        newLevel = currentLevel + 1;
+        newLog = [...newLog, `LEVEL UP! Reached Career Level ${newLevel}!`];
+    }
+    
+    return {
+        ...state,
+        player: { ...state.player, careerXp: newXp, careerLevel: newLevel },
+        log: newLog
+    };
 };
 
 const processWeeklyUpdate = (state: GameState): GameState => {
@@ -94,6 +155,19 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     
     if (year >= END_YEAR) {
         return { ...state, gameStatus: GameStatus.ENDED };
+    }
+
+    const levelMultipliers = LEVEL_MULTIPLIERS[state.player.careerLevel - 1];
+    let newWeeksSinceLastRelease = state.weeksSinceLastRelease + 1;
+    let fameDecay = 0;
+    let repDecay = 0;
+    let decayLog = "";
+
+    if (newWeeksSinceLastRelease >= 4) {
+        const decayRate = DECAY_RATES[state.player.careerLevel - 1];
+        fameDecay = Math.floor(state.player.stats.fame * decayRate);
+        repDecay = Math.floor(state.player.stats.reputation * decayRate);
+        decayLog = `Inactivity led to a loss of ${fameDecay} fame and ${repDecay} reputation.`;
     }
     
     let passiveFameBonus = 0;
@@ -110,48 +184,54 @@ const processWeeklyUpdate = (state: GameState): GameState => {
 
     const updatedTracks = state.discography.tracks.map(t => {
         if(!t.isReleased) return t;
-        const promotionMultiplier = t.promotion.isActive ? 3 : 1;
-        const newStreams = Math.floor(t.quality * (state.player.stats.fame + 1) * 0.1 * (Math.random() + 0.5) * promotionMultiplier);
+        const promotionMultiplier = t.promotion.isActive ? PROMOTION_MULTIPLIERS[t.promotion.tier!] : 1;
+        const newStreams = Math.floor(t.quality * (state.player.stats.fame + 1) * 0.1 * (Math.random() + 0.5) * promotionMultiplier * levelMultipliers.streamsViews);
         
         const streamRate = t.albumId ? ALBUM_STREAM_RATE : SINGLE_STREAM_RATE;
         const streamIncome = newStreams * streamRate;
 
         totalIncome += streamIncome;
         const weeksLeft = t.promotion.isActive ? t.promotion.weeksLeft - 1 : 0;
-        return {...t, streams: t.streams + newStreams, revenue: t.revenue + streamIncome, promotion: {isActive: weeksLeft > 0, weeksLeft}};
+        return {...t, streams: t.streams + newStreams, revenue: t.revenue + streamIncome, promotion: {...t.promotion, isActive: weeksLeft > 0, weeksLeft}};
     });
 
     const updatedAlbums = state.discography.albums.map(a => {
-        const promotionMultiplier = a.promotion.isActive ? 3 : 1;
+        const promotionMultiplier = a.promotion.isActive ? PROMOTION_MULTIPLIERS[a.promotion.tier!] : 1;
         const weeksSinceRelease = (year - a.releaseYear) * 52 + (week - a.releaseWeek);
         const salesDecay = Math.max(0.1, Math.pow(0.95, weeksSinceRelease));
-        const newSales = Math.floor((state.player.stats.fame + 1) * ALBUM_SALES_FACTOR * (1 + state.player.skills.marketing / 100) * (Math.random() * 0.5 + 0.75) * salesDecay * promotionMultiplier);
+        const newSales = Math.floor((state.player.stats.fame + 1) * ALBUM_SALES_FACTOR * (1 + state.player.skills.marketing / 100) * (Math.random() * 0.5 + 0.75) * salesDecay * promotionMultiplier * levelMultipliers.sales);
         const albumIncome = newSales * ALBUM_PRICE;
         totalIncome += albumIncome;
         const weeksLeft = a.promotion.isActive ? a.promotion.weeksLeft - 1 : 0;
-        return {...a, sales: a.sales + newSales, revenue: a.revenue + albumIncome, promotion: {isActive: weeksLeft > 0, weeksLeft}};
+        return {...a, sales: a.sales + newSales, revenue: a.revenue + albumIncome, promotion: {...a.promotion, isActive: weeksLeft > 0, weeksLeft}};
     });
     
     let fameFromMVs = 0;
     const updatedMVs = state.discography.musicVideos.map(mv => {
-        const promotionMultiplier = mv.promotion.isActive ? 3 : 1;
-        const newViews = Math.floor(mv.quality * (state.player.stats.fame + 1) * MV_VIEWS_FACTOR * (1 + state.player.skills.marketing / 100) * promotionMultiplier);
+        const promotionMultiplier = mv.promotion.isActive ? PROMOTION_MULTIPLIERS[mv.promotion.tier!] : 1;
+        const newViews = Math.floor(mv.quality * (state.player.stats.fame + 1) * MV_VIEWS_FACTOR * (1 + state.player.skills.marketing / 100) * promotionMultiplier * levelMultipliers.streamsViews);
         const mvIncome = newViews * MV_VIEWS_INCOME_RATE;
         totalIncome += mvIncome;
-        fameFromMVs += Math.floor(newViews / 5000); // 1 fame per 5000 views
+        fameFromMVs += Math.floor(newViews / 50000); // 1 fame per 50k views (rebalanced)
         const weeksLeft = mv.promotion.isActive ? mv.promotion.weeksLeft - 1 : 0;
-        return {...mv, views: mv.views + newViews, revenue: mv.revenue + mvIncome, promotion: {isActive: weeksLeft > 0, weeksLeft}};
+        return {...mv, views: mv.views + newViews, revenue: mv.revenue + mvIncome, promotion: {...mv.promotion, isActive: weeksLeft > 0, weeksLeft}};
     });
     
-    const fameGrowth = Math.floor(totalIncome / 200) + fameFromMVs + passiveFameBonus;
-    const newFame = state.player.stats.fame + fameGrowth;
-    const newRep = state.player.stats.reputation + passiveRepBonus;
-    const newFans = Math.floor(newFame * FANS_PER_FAME_POINT * (1 + state.player.skills.marketing / 100));
+    const baseFameGrowth = Math.floor(totalIncome / 2000) + fameFromMVs + passiveFameBonus;
+    const fameGrowth = Math.floor(baseFameGrowth * levelMultipliers.fameRep);
+    const repGrowth = Math.floor(passiveRepBonus * levelMultipliers.fameRep);
+    
+    const newFame = Math.min(MAX_FAME, Math.max(0, state.player.stats.fame + fameGrowth - fameDecay));
+    const newRep = Math.min(MAX_REPUTATION, Math.max(0, state.player.stats.reputation + repGrowth - repDecay));
+    const newFans = Math.floor(newFame * 50 * (1 + state.player.skills.marketing / 100)); // Rebalanced fan calculation
 
     const newHistory = {...state.history};
     if(week === 52) {
         newHistory[year] = { fame: newFame, fans: newFans, netWorth: state.player.stats.netWorth + totalIncome };
     }
+
+    let weeklyLog = [`Earned $${totalIncome.toFixed(2)} from music this week.`];
+    if (decayLog) weeklyLog.push(decayLog);
 
     const newState = {
         ...state,
@@ -168,8 +248,9 @@ const processWeeklyUpdate = (state: GameState): GameState => {
             }
         },
         discography: { tracks: updatedTracks, albums: updatedAlbums, musicVideos: updatedMVs },
-        log: [...state.log.slice(-10), `Earned $${totalIncome.toFixed(2)} from music this week.`],
-        history: newHistory
+        log: [...state.log.slice(-10), ...weeklyLog],
+        history: newHistory,
+        weeksSinceLastRelease: newWeeksSinceLastRelease,
     };
     
     try {
@@ -214,7 +295,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                     ...state.player.stats,
                     netWorth: state.player.stats.netWorth + money,
                     energy: state.player.stats.energy - energyCost,
-                    fame: state.player.stats.fame + fameGain,
+                    fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain),
                 }
             },
             log: [...state.log, `Worked a job and earned $${money}.`]
@@ -245,7 +326,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             releaseWeek: null,
             releaseYear: null,
             revenue: 0,
-            promotion: { isActive: false, weeksLeft: 0 },
+            promotion: { isActive: false, weeksLeft: 0, tier: null },
         };
 
         return {
@@ -267,15 +348,18 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const trackToRelease = state.discography.tracks.find(t => t.id === action.payload.trackId);
         if (!trackToRelease) return state;
 
+        const stateWithXp = addXp(state, XP_GAINS.TRACK_RELEASE);
+
         return {
-            ...state,
+            ...stateWithXp,
+            weeksSinceLastRelease: 0,
             discography: {
-                ...state.discography,
-                tracks: state.discography.tracks.map(t => t.id === action.payload.trackId ? {
+                ...stateWithXp.discography,
+                tracks: stateWithXp.discography.tracks.map(t => t.id === action.payload.trackId ? {
                     ...t, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
                 } : t)
             },
-            log: [...state.log, `Released the single "${trackToRelease.title}".`]
+            log: [...stateWithXp.log, `Released the single "${trackToRelease.title}".`]
         }
     }
 
@@ -286,32 +370,35 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const newAlbum: Album = {
             id: `album-${Date.now()}`, title, trackIds, sales: 0,
             releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year,
-            revenue: 0, promotion: { isActive: false, weeksLeft: 0 },
+            revenue: 0, promotion: { isActive: false, weeksLeft: 0, tier: null },
         };
 
-        const fameBoost = releaseType === 'premium' ? 100 : 0;
-        const repBoost = releaseType === 'premium' ? 10 : 0;
+        const fameBoost = releaseType === 'premium' ? 10 : 0;
+        const repBoost = releaseType === 'premium' ? 2 : 0;
+        
+        const stateWithXp = addXp(state, XP_GAINS.ALBUM_RELEASE);
 
         return {
-            ...state,
+            ...stateWithXp,
+            weeksSinceLastRelease: 0,
             player: {
-                ...state.player,
+                ...stateWithXp.player,
                 stats: { 
-                    ...state.player.stats, 
-                    energy: state.player.stats.energy - energyCost,
-                    netWorth: state.player.stats.netWorth - cost,
-                    fame: state.player.stats.fame + fameBoost,
-                    reputation: state.player.stats.reputation + repBoost,
+                    ...stateWithXp.player.stats, 
+                    energy: stateWithXp.player.stats.energy - energyCost,
+                    netWorth: stateWithXp.player.stats.netWorth - cost,
+                    fame: Math.min(MAX_FAME, stateWithXp.player.stats.fame + fameBoost),
+                    reputation: Math.min(MAX_REPUTATION, stateWithXp.player.stats.reputation + repBoost),
                 }
             },
             discography: {
-                ...state.discography,
-                albums: [...state.discography.albums, newAlbum],
-                tracks: state.discography.tracks.map(t => trackIds.includes(t.id) ? {
+                ...stateWithXp.discography,
+                albums: [...stateWithXp.discography.albums, newAlbum],
+                tracks: stateWithXp.discography.tracks.map(t => trackIds.includes(t.id) ? {
                     ...t, albumId: newAlbum.id, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
                 } : t),
             },
-            log: [...state.log, `Released a new album: "${title}". ${fameBoost > 0 ? 'The premium release generated some buzz!' : ''}`]
+            log: [...stateWithXp.log, `Released a new album: "${title}". ${fameBoost > 0 ? 'The premium release generated some buzz!' : ''}`]
         }
     }
 
@@ -324,29 +411,32 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const trackQuality = state.discography.tracks.find(t => t.id === trackId)?.quality || 0;
         const marketingBonus = 1 + (state.player.skills.marketing / 200);
-        const baseQuality = trackQuality * (0.8 + (state.player.stats.fame + 1) / 10000);
+        const baseQuality = trackQuality * (0.8 + (state.player.stats.fame + 1) / 100);
         const mvQuality = Math.min(100, Math.floor(baseQuality * marketingBonus * agencyMultiplier));
 
         const newMv: MusicVideo = {
             id: `mv-${Date.now()}`, trackId, trackTitle, quality: mvQuality, views: 0,
-            revenue: 0, promotion: { isActive: false, weeksLeft: 0 }, agency
+            revenue: 0, promotion: { isActive: false, weeksLeft: 0, tier: null }, agency
         };
 
-        const fameGain = agency === 'premium' ? Math.floor(Math.random() * 500) + 500 : 0; // big initial boost for premium
+        const fameGain = agency === 'premium' ? Math.floor(Math.random() * 5) + 5 : 0; // big initial boost for premium
+        
+        const stateWithXp = addXp(state, XP_GAINS.MV_RELEASE);
 
         return {
-            ...state,
+            ...stateWithXp,
+            weeksSinceLastRelease: 0,
              player: {
-                ...state.player,
+                ...stateWithXp.player,
                 stats: { 
-                    ...state.player.stats,
-                    energy: state.player.stats.energy - energyCost,
-                    netWorth: state.player.stats.netWorth - cost,
-                    fame: state.player.stats.fame + fameGain,
+                    ...stateWithXp.player.stats,
+                    energy: stateWithXp.player.stats.energy - energyCost,
+                    netWorth: stateWithXp.player.stats.netWorth - cost,
+                    fame: Math.min(MAX_FAME, stateWithXp.player.stats.fame + fameGain),
                 }
             },
-            discography: { ...state.discography, musicVideos: [...state.discography.musicVideos, newMv] },
-            log: [...state.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}. ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
+            discography: { ...stateWithXp.discography, musicVideos: [...stateWithXp.discography.musicVideos, newMv] },
+            log: [...stateWithXp.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}. ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
         }
     }
     
@@ -359,12 +449,12 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const usernames = ["RapFan123", "HipHopHead", "MusicLover", "RealTalk", "BeatJunkie", "FlowMaster"];
         const now = Date.now();
 
-        const fameGain = Math.floor(5 * (1 + state.player.skills.marketing / 20));
+        const fameGain = Math.floor(1 * (1 + state.player.skills.marketing / 20));
 
         const newPost: RapGramPost = {
             id: `post-${now}`,
             text: postTemplates[Math.floor(Math.random() * postTemplates.length)],
-            imageUrl: `https://picsum.photos/seed/${Math.random()}/400`,
+            imageUrl: rapGramImageUrls[Math.floor(Math.random() * rapGramImageUrls.length)],
             likes: Math.floor(state.player.stats.fans * 0.05 * (Math.random() * 0.5 + 0.8)),
             comments: Array.from({ length: Math.floor(Math.random() * 3) + 3 }).map(() => ({
                 username: usernames[Math.floor(Math.random() * usernames.length)],
@@ -377,18 +467,20 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             createdAt: now,
         };
 
+        const stateWithXp = addXp(state, XP_GAINS.SOCIAL_POST);
+
         return {
-            ...state,
+            ...stateWithXp,
             player: {
-                ...state.player,
+                ...stateWithXp.player,
                 stats: {
-                    ...state.player.stats,
-                    energy: state.player.stats.energy - energyCost,
-                    fame: state.player.stats.fame + fameGain,
+                    ...stateWithXp.player.stats,
+                    energy: stateWithXp.player.stats.energy - energyCost,
+                    fame: Math.min(MAX_FAME, stateWithXp.player.stats.fame + fameGain),
                 }
             },
-            socialFeed: [newPost, ...state.socialFeed],
-            log: [...state.log, `Posted on RapGram, gained ${fameGain} fame.`]
+            socialFeed: [newPost, ...stateWithXp.socialFeed],
+            log: [...stateWithXp.log, `Posted on RapGram, gained ${fameGain} fame.`]
         }
     }
     
@@ -398,13 +490,13 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const post = state.socialFeed.find(p => p.id === postId);
         if(!post || post.isLiked) return state;
 
-        const fameGain = Math.random() < 0.25 ? Math.floor(Math.random() * 5) + 1 : 0;
+        const fameGain = Math.random() < 0.25 ? 1 : 0;
         let logMessage = `Liked a post.`;
         if(fameGain > 0) logMessage += ` Gained ${fameGain} fame!`;
 
         return {
             ...state,
-            player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, fame: state.player.stats.fame + fameGain}},
+            player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain)}},
             socialFeed: state.socialFeed.map(p => p.id === postId ? {...p, isLiked: true, likes: p.likes + 1} : p),
             log: [...state.log, logMessage],
         }
@@ -416,7 +508,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const post = state.socialFeed.find(p => p.id === postId);
         if(!post || post.isCommented) return state;
 
-        const repGain = Math.random() < 0.25 ? Math.floor(Math.random() * 5) + 1 : 0;
+        const repGain = Math.random() < 0.25 ? 1 : 0;
         let logMessage = `Commented on a post.`;
         if(repGain > 0) logMessage += ` Gained ${repGain} reputation!`;
         
@@ -429,17 +521,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         return {
             ...state,
-            player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, reputation: state.player.stats.reputation + repGain}},
+            player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, reputation: Math.min(MAX_REPUTATION, state.player.stats.reputation + repGain)}},
             socialFeed: state.socialFeed.map(p => p.id === postId ? {...p, isCommented: true, comments: [...p.comments, newComment]} : p),
             log: [...state.log, logMessage],
         }
     }
 
     case ActionType.PROMOTE_RELEASE: {
-        const { releaseId, type, cost } = action.payload;
+        const { releaseId, type, tier, cost } = action.payload;
         if (state.player.stats.netWorth < cost) return state;
         
-        const updatePromotion = (item: any) => ({ ...item, promotion: { isActive: true, weeksLeft: 4 } });
+        const updatePromotion = (item: any) => ({ ...item, promotion: { isActive: true, weeksLeft: 4, tier } });
 
         let updatedDiscography = { ...state.discography };
         let releaseName = "";
@@ -450,12 +542,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         } else if (type === 'mv') {
             updatedDiscography.musicVideos = state.discography.musicVideos.map(mv => mv.id === releaseId ? (releaseName = mv.trackTitle, updatePromotion(mv)) : mv);
         }
+        
+        const stateWithXp = addXp(state, XP_GAINS.PROMOTION);
 
         return {
-            ...state,
-            player: { ...state.player, stats: { ...state.player.stats, netWorth: state.player.stats.netWorth - cost } },
+            ...stateWithXp,
+            player: { ...stateWithXp.player, stats: { ...stateWithXp.player.stats, netWorth: stateWithXp.player.stats.netWorth - cost } },
             discography: updatedDiscography,
-            log: [...state.log, `Started a 4-week promotion for "${releaseName}" for $${cost}.`]
+            log: [...stateWithXp.log, `Started a 4-week ${tier} promotion for "${releaseName}" for $${cost}.`]
         }
     }
 
@@ -477,8 +571,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const currentStats = state.player.stats;
         const newStats = {
             ...currentStats,
-            fame: currentStats.fame + (effects.fame || 0),
-            reputation: currentStats.reputation + (effects.reputation || 0),
+            fame: Math.min(MAX_FAME, currentStats.fame + (effects.fame || 0)),
+            reputation: Math.min(MAX_REPUTATION, currentStats.reputation + (effects.reputation || 0)),
             fans: currentStats.fans + (effects.fans || 0),
             netWorth: currentStats.netWorth + (effects.netWorth || 0),
             energy: Math.max(0, currentStats.energy + (effects.energy || 0)),
@@ -528,7 +622,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         if(item.category === ItemCategory.LIFESTYLE) {
             if(player.ownedItemIds.includes(item.id)) return state; // Already own this unique item
             newOwnedItemIds = [...player.ownedItemIds, item.id];
-            newStats.reputation += item.repBonus || 0;
+            newStats.reputation = Math.min(MAX_REPUTATION, newStats.reputation + (item.repBonus || 0));
             logMessage += ` Gained ${item.repBonus || 0} reputation.`
         }
 

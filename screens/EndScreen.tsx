@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { ActionType, GameStatus } from '../types';
@@ -26,6 +25,10 @@ const EndScreen: React.FC = () => {
                 <h2 className="text-xl font-semibold">Final Stats</h2>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-2 rounded-lg bg-black">
+                        <p className="text-sm text-ios-label-secondary">Career Level</p>
+                        <p className="text-2xl font-bold text-purple-400">{player.careerLevel}</p>
+                    </div>
+                    <div className="p-2 rounded-lg bg-black">
                         <p className="text-sm text-ios-label-secondary">Fame</p>
                         <p className="text-2xl font-bold text-yellow-400">{formatNumber(player.stats.fame)}</p>
                     </div>
@@ -40,6 +43,10 @@ const EndScreen: React.FC = () => {
                     <div className="p-2 rounded-lg bg-black">
                         <p className="text-sm text-ios-label-secondary">Tracks Made</p>
                         <p className="text-2xl font-bold">{discography.tracks.length}</p>
+                    </div>
+                     <div className="p-2 rounded-lg bg-black">
+                        <p className="text-sm text-ios-label-secondary">Albums Made</p>
+                        <p className="text-2xl font-bold">{discography.albums.length}</p>
                     </div>
                 </div>
             </div>

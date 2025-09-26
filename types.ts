@@ -23,6 +23,7 @@ export interface GameDate {
 export interface Promotion {
     isActive: boolean;
     weeksLeft: number;
+    tier: 'basic' | 'medium' | 'advanced' | 'premium' | null;
 }
 
 export interface Track {
@@ -76,6 +77,8 @@ export interface Player {
     audio: number; // level
     software: number; // level
   };
+  careerLevel: number;
+  careerXp: number;
 }
 
 export interface RapGramComment {
@@ -127,6 +130,7 @@ export interface GameState {
   };
   socialFeed: RapGramPost[];
   activeEvent: GameEvent | null;
+  weeksSinceLastRelease: number;
 }
 
 export interface SaveSlot {
@@ -190,7 +194,7 @@ export type GameAction =
   | { type: ActionType.CREATE_RAPGRAM_POST, payload: { energyCost: number } }
   | { type: ActionType.LIKE_POST, payload: { postId: string, energyCost: number } }
   | { type: ActionType.COMMENT_ON_POST, payload: { postId: string, energyCost: number } }
-  | { type: ActionType.PROMOTE_RELEASE, payload: { releaseId: string, type: 'track' | 'album' | 'mv', cost: number } }
+  | { type: ActionType.PROMOTE_RELEASE, payload: { releaseId: string, type: 'track' | 'album' | 'mv', tier: 'basic' | 'medium' | 'advanced' | 'premium', cost: number } }
   | { type: ActionType.ADVANCE_WEEK }
   | { type: ActionType.TRAIN_SKILL, payload: { skill: keyof Player['skills'], energyCost: number } }
   | { type: ActionType.BUY_ITEM, payload: { item: ShopItem } }
