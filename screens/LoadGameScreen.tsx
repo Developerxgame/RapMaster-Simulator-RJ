@@ -6,6 +6,8 @@ import { ChevronRightIcon, TrashIcon } from '../components/Icons';
 const LoadGameScreen: React.FC = () => {
     const { dispatch } = useGame();
     const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([]);
+    const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+
 
     const fetchSaveSlots = useCallback(() => {
         const slots: SaveSlot[] = [];
@@ -40,10 +42,9 @@ const LoadGameScreen: React.FC = () => {
     };
 
     const handleDelete = (slotId: string) => {
-        if (window.confirm(`Are you sure you want to delete this save slot?`)) {
-            dispatch({ type: ActionType.DELETE_SAVE, payload: { slotId }});
-            fetchSaveSlots(); // Refresh the list
-        }
+        dispatch({ type: ActionType.DELETE_SAVE, payload: { slotId }});
+        setConfirmingDelete(null);
+        fetchSaveSlots(); // Refresh the list
     }
 
     const handleBack = () => {
@@ -74,7 +75,7 @@ const LoadGameScreen: React.FC = () => {
                             </div>
                         </div>
                          <div className="flex items-center">
-                            <button onClick={() => handleDelete(slot.slotId)} className="p-2 text-ios-red hover:bg-red-500/20 rounded-full">
+                            <button onClick={() => setConfirmingDelete(slot.slotId)} className="p-2 text-ios-red hover:bg-red-500/20 rounded-full">
                                 <TrashIcon className="w-6 h-6"/>
                             </button>
                              <button onClick={() => handleLoad(slot.slotId)} className="p-2 text-ios-label-secondary">
@@ -95,6 +96,31 @@ const LoadGameScreen: React.FC = () => {
             >
                 Back to Menu
             </button>
+
+            {confirmingDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-ios-bg-secondary rounded-2xl p-6 w-full max-w-sm mx-auto shadow-lg border border-gray-700 space-y-4">
+                        <h2 className="text-xl font-bold text-center text-ios-label">Delete Save?</h2>
+                        <p className="text-base text-ios-label-secondary text-center">
+                            Are you sure you want to permanently delete this save file? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-between space-x-3 pt-2">
+                            <button
+                                onClick={() => setConfirmingDelete(null)}
+                                className="w-full py-3 px-4 bg-ios-gray text-white font-semibold rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                             <button
+                                onClick={() => handleDelete(confirmingDelete)}
+                                className="w-full py-3 px-4 bg-ios-red text-white font-semibold rounded-lg"
+                            >
+                                Confirm Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

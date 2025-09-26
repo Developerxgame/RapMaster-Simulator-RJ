@@ -57,6 +57,7 @@ export interface MusicVideo {
     views: number;
     revenue: number;
     promotion: Promotion;
+    agency: 'low' | 'mid' | 'high' | 'premium';
 }
 
 export interface Player {
@@ -182,16 +183,16 @@ export type GameAction =
   | { type: ActionType.START_GAME; payload: { stageName: string; avatarUrl: string } }
   | { type: ActionType.SET_STATUS; payload: GameStatus }
   | { type: ActionType.WORK_JOB; payload: { money: number; energyCost: number; fameGain: number } }
-  | { type: ActionType.CREATE_TRACK; payload: { title: string, energyCost: number } }
+  | { type: ActionType.CREATE_TRACK; payload: { title: string; energyCost: number; beatType: 'free' | 'premium'; cost: number } }
   | { type: ActionType.RELEASE_TRACK; payload: { trackId: string } }
-  | { type: ActionType.CREATE_ALBUM; payload: { title: string, trackIds: string[], energyCost: number } }
-  | { type: ActionType.CREATE_MV; payload: { trackId: string, trackTitle: string, energyCost: number } }
+  | { type: ActionType.CREATE_ALBUM; payload: { title: string; trackIds: string[]; energyCost: number; releaseType: 'default' | 'premium'; cost: number } }
+  | { type: ActionType.CREATE_MV; payload: { trackId: string; trackTitle: string; energyCost: number; agency: 'low' | 'mid' | 'high' | 'premium'; cost: number } }
   | { type: ActionType.CREATE_RAPGRAM_POST, payload: { energyCost: number } }
   | { type: ActionType.LIKE_POST, payload: { postId: string, energyCost: number } }
   | { type: ActionType.COMMENT_ON_POST, payload: { postId: string, energyCost: number } }
   | { type: ActionType.PROMOTE_RELEASE, payload: { releaseId: string, type: 'track' | 'album' | 'mv', cost: number } }
   | { type: ActionType.ADVANCE_WEEK }
-  | { type: ActionType.TRAIN_SKILL, payload: { skill: keyof Player['skills'], cost: number, energyCost: number } }
+  | { type: ActionType.TRAIN_SKILL, payload: { skill: keyof Player['skills'], energyCost: number } }
   | { type: ActionType.BUY_ITEM, payload: { item: ShopItem } }
   | { type: ActionType.END_GAME }
   | { type: ActionType.SAVE_GAME; payload: { slotId: string } }

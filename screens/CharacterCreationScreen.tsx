@@ -3,12 +3,12 @@ import { useGame } from '../context/GameContext';
 import { ActionType, GameStatus } from '../types';
 
 const avatars = [
-  { id: 1, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper1' },
-  { id: 2, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper2' },
-  { id: 3, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper3' },
-  { id: 4, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper4' },
-  { id: 5, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper5' },
-  { id: 6, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper6' },
+  { id: 1, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper1' },
+  { id: 2, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper2' },
+  { id: 3, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper3' },
+  { id: 4, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper4' },
+  { id: 5, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper5' },
+  { id: 6, url: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper6' },
 ];
 
 const CharacterCreationScreen: React.FC = () => {

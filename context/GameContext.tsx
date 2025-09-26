@@ -4,9 +4,10 @@ import { shopItems } from '../screens/ShopScreen';
 
 const MAX_ENERGY = 100;
 const FANS_PER_FAME_POINT = 10;
-const STREAMS_INCOME_RATE = 0.003; 
-const MV_VIEWS_INCOME_RATE = 0.001; 
-const ALBUM_PRICE = 5;
+const SINGLE_STREAM_RATE = 0.20;
+const ALBUM_STREAM_RATE = 0.50;
+const MV_VIEWS_INCOME_RATE = 0.30; 
+const ALBUM_PRICE = 3;
 const ALBUM_SALES_FACTOR = 0.5;
 const MV_VIEWS_FACTOR = 1.2;
 const END_YEAR = 2060;
@@ -47,7 +48,7 @@ const initialState: GameState = {
   gameStatus: GameStatus.SPLASH,
   player: {
     stageName: 'Rookie',
-    avatarUrl: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper1',
+    avatarUrl: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper1',
     stats: {
       fame: 0,
       reputation: 0,
@@ -111,7 +112,10 @@ const processWeeklyUpdate = (state: GameState): GameState => {
         if(!t.isReleased) return t;
         const promotionMultiplier = t.promotion.isActive ? 3 : 1;
         const newStreams = Math.floor(t.quality * (state.player.stats.fame + 1) * 0.1 * (Math.random() + 0.5) * promotionMultiplier);
-        const streamIncome = newStreams * STREAMS_INCOME_RATE;
+        
+        const streamRate = t.albumId ? ALBUM_STREAM_RATE : SINGLE_STREAM_RATE;
+        const streamIncome = newStreams * streamRate;
+
         totalIncome += streamIncome;
         const weeksLeft = t.promotion.isActive ? t.promotion.weeksLeft - 1 : 0;
         return {...t, streams: t.streams + newStreams, revenue: t.revenue + streamIncome, promotion: {isActive: weeksLeft > 0, weeksLeft}};
@@ -218,16 +222,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     
     case ActionType.CREATE_TRACK: {
-        const { title, energyCost } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        const { title, energyCost, beatType, cost } = action.payload;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
         
         const micBonus = state.player.studioEquipment.mic;
         const audioBonus = state.player.studioEquipment.audio;
         const softwareBonus = state.player.studioEquipment.software;
         const equipmentBonus = micBonus + audioBonus + softwareBonus;
 
+        const beatMultiplier = beatType === 'premium' ? 1.2 : 1.0;
         const baseQuality = (state.player.skills.lyricism + state.player.skills.flow + state.player.skills.production) / 3;
-        const qualityWithBonus = baseQuality + equipmentBonus;
+        const qualityWithBonus = (baseQuality + equipmentBonus) * beatMultiplier;
         const quality = Math.floor(qualityWithBonus * (Math.random() * 0.4 + 0.8)); // 80-120% variance
 
         const newTrack: Track = {
@@ -247,7 +252,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             ...state,
             player: {
                 ...state.player,
-                stats: { ...state.player.stats, energy: state.player.stats.energy - energyCost }
+                stats: { 
+                    ...state.player.stats, 
+                    energy: state.player.stats.energy - energyCost,
+                    netWorth: state.player.stats.netWorth - cost,
+                }
             },
             discography: { ...state.discography, tracks: [...state.discography.tracks, newTrack] },
             log: [...state.log, `Recorded a new track: "${title}" with a quality score of ${newTrack.quality}.`]
@@ -271,8 +280,8 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
 
     case ActionType.CREATE_ALBUM: {
-        const { title, trackIds, energyCost } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        const { title, trackIds, energyCost, releaseType, cost } = action.payload;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
 
         const newAlbum: Album = {
             id: `album-${Date.now()}`, title, trackIds, sales: 0,
@@ -280,11 +289,20 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             revenue: 0, promotion: { isActive: false, weeksLeft: 0 },
         };
 
+        const fameBoost = releaseType === 'premium' ? 100 : 0;
+        const repBoost = releaseType === 'premium' ? 10 : 0;
+
         return {
             ...state,
             player: {
                 ...state.player,
-                stats: { ...state.player.stats, energy: state.player.stats.energy - energyCost }
+                stats: { 
+                    ...state.player.stats, 
+                    energy: state.player.stats.energy - energyCost,
+                    netWorth: state.player.stats.netWorth - cost,
+                    fame: state.player.stats.fame + fameBoost,
+                    reputation: state.player.stats.reputation + repBoost,
+                }
             },
             discography: {
                 ...state.discography,
@@ -293,32 +311,42 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                     ...t, albumId: newAlbum.id, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
                 } : t),
             },
-            log: [...state.log, `Released a new album: "${title}".`]
+            log: [...state.log, `Released a new album: "${title}". ${fameBoost > 0 ? 'The premium release generated some buzz!' : ''}`]
         }
     }
 
     case ActionType.CREATE_MV: {
-        const { trackId, trackTitle, energyCost } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        const { trackId, trackTitle, energyCost, agency, cost } = action.payload;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
         
+        const agencyMultipliers = { low: 0.8, mid: 1.0, high: 1.3, premium: 1.8 };
+        const agencyMultiplier = agencyMultipliers[agency];
+
         const trackQuality = state.discography.tracks.find(t => t.id === trackId)?.quality || 0;
         const marketingBonus = 1 + (state.player.skills.marketing / 200);
         const baseQuality = trackQuality * (0.8 + (state.player.stats.fame + 1) / 10000);
-        const mvQuality = Math.min(100, Math.floor(baseQuality * marketingBonus));
+        const mvQuality = Math.min(100, Math.floor(baseQuality * marketingBonus * agencyMultiplier));
 
         const newMv: MusicVideo = {
             id: `mv-${Date.now()}`, trackId, trackTitle, quality: mvQuality, views: 0,
-            revenue: 0, promotion: { isActive: false, weeksLeft: 0 },
+            revenue: 0, promotion: { isActive: false, weeksLeft: 0 }, agency
         };
+
+        const fameGain = agency === 'premium' ? Math.floor(Math.random() * 500) + 500 : 0; // big initial boost for premium
 
         return {
             ...state,
              player: {
                 ...state.player,
-                stats: { ...state.player.stats, energy: state.player.stats.energy - energyCost }
+                stats: { 
+                    ...state.player.stats,
+                    energy: state.player.stats.energy - energyCost,
+                    netWorth: state.player.stats.netWorth - cost,
+                    fame: state.player.stats.fame + fameGain,
+                }
             },
             discography: { ...state.discography, musicVideos: [...state.discography.musicVideos, newMv] },
-            log: [...state.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}.`]
+            log: [...state.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}. ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
         }
     }
     
@@ -470,9 +498,9 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
     
     case ActionType.TRAIN_SKILL: {
-        const { skill, cost, energyCost } = action.payload;
+        const { skill, energyCost } = action.payload;
         const player = state.player;
-        if (player.stats.netWorth < cost || player.stats.energy < energyCost || player.skills[skill] >= 100) {
+        if (player.stats.energy < energyCost || player.skills[skill] >= 100) {
             return state;
         }
         
@@ -480,7 +508,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             ...state,
             player: {
                 ...player,
-                stats: { ...player.stats, netWorth: player.stats.netWorth - cost, energy: player.stats.energy - energyCost },
+                stats: { ...player.stats, energy: player.stats.energy - energyCost },
                 skills: { ...player.skills, [skill]: player.skills[skill] + 1 }
             },
             log: [...state.log, `Trained ${skill}, it's now level ${player.skills[skill] + 1}.`]

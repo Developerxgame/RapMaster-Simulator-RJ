@@ -6,6 +6,14 @@ import { MusicNoteIcon, CollectionIcon, VideoCameraIcon } from '../components/Ic
 
 type StudioTab = 'track' | 'album' | 'mv';
 
+const lyricTopics = [
+    'Money & Fame',
+    'Struggle & Hustle',
+    'Partying & Lifestyle',
+    'Social Commentary',
+    'Love & Heartbreak',
+];
+
 const StudioScreen: React.FC = () => {
     const { state, dispatch } = useGame();
     const { player, discography } = state;
@@ -13,7 +21,7 @@ const StudioScreen: React.FC = () => {
     
     // Track State
     const [trackTitle, setTrackTitle] = useState('');
-    const [lyricTopic, setLyricTopic] = useState('');
+    const [beatType, setBeatType] = useState<'free' | 'premium'>('free');
     const [generatedLyrics, setGeneratedLyrics] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [animateRecord, setAnimateRecord] = useState(false);
@@ -21,19 +29,31 @@ const StudioScreen: React.FC = () => {
 
     // Album State
     const [albumTitle, setAlbumTitle] = useState('');
+    const [releaseType, setReleaseType] = useState<'default' | 'premium'>('default');
     const [selectedTrackIds, setSelectedTrackIds] = useState<string[]>([]);
     
     // MV State
     const [selectedTrackForMV, setSelectedTrackForMV] = useState<string>('');
+    const [selectedAgency, setSelectedAgency] = useState<'low' | 'mid' | 'high' | 'premium'>('low');
 
     const unreleasedTracks = useMemo(() => discography.tracks.filter(t => !t.isReleased), [discography.tracks]);
     const releasedTracks = useMemo(() => discography.tracks.filter(t => t.isReleased), [discography.tracks]);
     const availableForAlbum = useMemo(() => discography.tracks.filter(t => !t.albumId), [discography.tracks]);
 
-    const handleGenerateLyrics = async () => {
+    const premiumBeatCost = 1000;
+    const premiumAlbumCost = 5000;
+    const agencyOptions = {
+        low: { name: 'Low Budget', cost: 500, description: 'Cheap, but gets the job done.' },
+        mid: { name: 'Mid-Range', cost: 2500, description: 'Decent quality for a fair price.' },
+        high: { name: 'High Production', cost: 10000, description: 'Professional quality, higher views.' },
+        premium: { name: 'Premium Agency', cost: 50000, description: 'Guaranteed viral potential.' },
+    };
+
+    const handleGenerateLyrics = async (topic: string) => {
         setIsLoading(true);
         setError('');
-        const lyrics = await generateLyrics(lyricTopic);
+        setGeneratedLyrics('');
+        const lyrics = await generateLyrics(topic);
         setGeneratedLyrics(lyrics);
         setIsLoading(false);
     };
@@ -41,23 +61,24 @@ const StudioScreen: React.FC = () => {
     const handleCreateTrack = () => {
         setError('');
         if (!trackTitle.trim()) {
-            setError('Track title cannot be empty.');
-            return;
+            setError('Track title cannot be empty.'); return;
         }
         if (player.stats.energy < 20) {
-            setError('Not enough energy.');
-            return;
+            setError('Not enough energy.'); return;
+        }
+        const cost = beatType === 'premium' ? premiumBeatCost : 0;
+        if (player.stats.netWorth < cost) {
+            setError('Not enough money for a premium beat.'); return;
         }
         const isDuplicate = discography.tracks.some(t => t.title.toLowerCase() === trackTitle.trim().toLowerCase());
         if(isDuplicate){
-            setError('A track with this title already exists.');
-            return;
+            setError('A track with this title already exists.'); return;
         }
 
-        dispatch({ type: ActionType.CREATE_TRACK, payload: { title: trackTitle.trim(), energyCost: 20 } });
+        dispatch({ type: ActionType.CREATE_TRACK, payload: { title: trackTitle.trim(), energyCost: 20, beatType, cost } });
         setTrackTitle('');
-        setLyricTopic('');
         setGeneratedLyrics('');
+        setBeatType('free');
         setAnimateRecord(true);
         setTimeout(() => setAnimateRecord(false), 1000);
     };
@@ -73,10 +94,12 @@ const StudioScreen: React.FC = () => {
     };
 
     const handleCreateAlbum = () => {
-        if (!albumTitle.trim() || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || player.stats.energy < 60) return;
-        dispatch({ type: ActionType.CREATE_ALBUM, payload: { title: albumTitle, trackIds: selectedTrackIds, energyCost: 60 } });
+        const cost = releaseType === 'premium' ? premiumAlbumCost : 0;
+        if (!albumTitle.trim() || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || player.stats.energy < 60 || player.stats.netWorth < cost) return;
+        dispatch({ type: ActionType.CREATE_ALBUM, payload: { title: albumTitle, trackIds: selectedTrackIds, energyCost: 60, releaseType, cost } });
         setAlbumTitle('');
         setSelectedTrackIds([]);
+        setReleaseType('default');
     };
     
     const handleCreateMV = () => {
@@ -84,8 +107,12 @@ const StudioScreen: React.FC = () => {
         const track = releasedTracks.find(t => t.id === selectedTrackForMV);
         if (!track) return;
         
+        const agency = selectedAgency;
+        const cost = agencyOptions[agency].cost;
+        if (player.stats.netWorth < cost) return;
+
         const mvTitle = `${track.title} - Official Music Video`;
-        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: mvTitle, energyCost: 40 } });
+        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: mvTitle, energyCost: 40, agency, cost } });
         setSelectedTrackForMV('');
     };
     
@@ -115,45 +142,53 @@ const StudioScreen: React.FC = () => {
                         <div>
                             <label htmlFor="trackTitle" className="block text-sm font-medium text-ios-label-secondary mb-1">Track Title</label>
                             <input
-                              type="text"
-                              id="trackTitle"
-                              value={trackTitle}
-                              onChange={(e) => setTrackTitle(e.target.value)}
+                              type="text" id="trackTitle" value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)}
                               placeholder="e.g. 'City Lights'"
                               className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700 focus:ring-2 focus:ring-ios-blue focus:outline-none"
                             />
                         </div>
                         
                         <div>
-                            <label htmlFor="lyricTopic" className="block text-sm font-medium text-ios-label-secondary mb-1">Lyric Topic (AI)</label>
-                            <div className="flex space-x-2">
-                                <input
-                                  type="text"
-                                  id="lyricTopic"
-                                  value={lyricTopic}
-                                  onChange={(e) => setLyricTopic(e.target.value)}
-                                  placeholder="e.g. 'making it big'"
-                                  className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700 focus:ring-2 focus:ring-ios-blue focus:outline-none"
-                                />
-                                <button
-                                  onClick={handleGenerateLyrics}
-                                  disabled={isLoading || !lyricTopic.trim()}
-                                  className="px-4 py-2 bg-purple-600 text-white font-bold rounded-lg disabled:bg-gray-500"
-                                >
-                                  {isLoading ? '...' : 'Generate'}
+                            <label className="block text-sm font-medium text-ios-label-secondary mb-2">Beat Selection</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => setBeatType('free')} className={`py-3 rounded-lg text-center ${beatType === 'free' ? 'bg-ios-blue text-white' : 'bg-black'}`}>
+                                    <p className="font-semibold">Free Beat</p>
+                                    <p className="text-xs">$0</p>
                                 </button>
+                                <button onClick={() => setBeatType('premium')} className={`py-3 rounded-lg text-center ${beatType === 'premium' ? 'bg-ios-blue text-white' : 'bg-black'}`}>
+                                    <p className="font-semibold">Premium Beat</p>
+                                    <p className="text-xs">${premiumBeatCost.toLocaleString()}</p>
+                                </button>
+                            </div>
+                            <p className="text-xs text-ios-label-secondary mt-1 text-center">Premium beats increase track quality.</p>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-ios-label-secondary mb-2">Get AI Lyric Ideas</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {lyricTopics.map(topic => (
+                                    <button key={topic} onClick={() => handleGenerateLyrics(topic)} disabled={isLoading} className="text-sm p-3 bg-purple-600 text-white font-semibold rounded-lg disabled:bg-ios-gray">
+                                        {topic}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {generatedLyrics && (
-                            <div className="bg-black p-3 rounded-lg border border-gray-600">
-                                <p className="text-sm font-mono whitespace-pre-wrap">{generatedLyrics}</p>
+                        {(isLoading || generatedLyrics) && (
+                            <div className="bg-black p-3 rounded-lg border border-gray-600 min-h-[100px]">
+                                {isLoading ? (
+                                    <div className="flex justify-center items-center h-full">
+                                        <p className="text-ios-label-secondary animate-pulse">Generating...</p>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm font-mono whitespace-pre-wrap">{generatedLyrics}</p>
+                                )}
                             </div>
                         )}
                         
                         {error && <p className="text-sm text-ios-red text-center">{error}</p>}
                         
-                        <button onClick={handleCreateTrack} disabled={!trackTitle.trim() || player.stats.energy < 20} className={`w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray ${animateRecord ? 'animate-pulse' : ''}`}>
+                        <button onClick={handleCreateTrack} disabled={!trackTitle.trim() || player.stats.energy < 20 || (beatType === 'premium' && player.stats.netWorth < premiumBeatCost)} className={`w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray ${animateRecord ? 'animate-pulse' : ''}`}>
                             Record Track
                         </button>
                     </div>
@@ -182,6 +217,21 @@ const StudioScreen: React.FC = () => {
                         <p className="text-sm text-ios-label-secondary">Costs 60 Energy ⚡. Requires 3-10 tracks.</p>
                         <input type="text" value={albumTitle} onChange={e => setAlbumTitle(e.target.value)} placeholder="Album Title" className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700"/>
                         
+                        <div>
+                            <label className="block text-sm font-medium text-ios-label-secondary mb-2">Release Type</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => setReleaseType('default')} className={`py-3 rounded-lg text-center ${releaseType === 'default' ? 'bg-ios-blue text-white' : 'bg-black'}`}>
+                                    <p className="font-semibold">Default Release</p>
+                                    <p className="text-xs">$0</p>
+                                </button>
+                                <button onClick={() => setReleaseType('premium')} className={`py-3 rounded-lg text-center ${releaseType === 'premium' ? 'bg-ios-blue text-white' : 'bg-black'}`}>
+                                    <p className="font-semibold">Premium Release</p>
+                                    <p className="text-xs">${premiumAlbumCost.toLocaleString()}</p>
+                                </button>
+                            </div>
+                            <p className="text-xs text-ios-label-secondary mt-1 text-center">Premium releases give an upfront fame boost.</p>
+                        </div>
+                        
                         <div className="max-h-60 overflow-y-auto space-y-2 pr-2">
                             <h3 className="text-lg font-semibold">Select Tracks ({selectedTrackIds.length}/10)</h3>
                             {availableForAlbum.map(track => (
@@ -191,7 +241,7 @@ const StudioScreen: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 60 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10} className="w-full py-4 text-lg bg-ios-green text-black font-bold rounded-xl shadow-md disabled:bg-ios-gray">
+                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 60 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || (releaseType === 'premium' && player.stats.netWorth < premiumAlbumCost)} className="w-full py-4 text-lg bg-ios-green text-black font-bold rounded-xl shadow-md disabled:bg-ios-gray">
                             Release Album
                         </button>
                     </div>
@@ -218,7 +268,27 @@ const StudioScreen: React.FC = () => {
                             <option value="">Select a Released Track</option>
                             {releasedTracks.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
                         </select>
-                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 40} className="w-full py-4 text-lg bg-ios-red text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray">
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-ios-label-secondary mb-2">Select Production Agency</label>
+                            <div className="space-y-2">
+                                {(Object.keys(agencyOptions) as Array<keyof typeof agencyOptions>).map(key => (
+                                    <div
+                                        key={key}
+                                        onClick={() => setSelectedAgency(key)}
+                                        className={`p-3 rounded-lg border-2 cursor-pointer ${selectedAgency === key ? 'border-ios-blue bg-blue-500/20' : 'border-transparent bg-black'}`}
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <p className="font-semibold">{agencyOptions[key].name}</p>
+                                            <p className="font-bold text-ios-green">${agencyOptions[key].cost.toLocaleString()}</p>
+                                        </div>
+                                        <p className="text-xs text-ios-label-secondary">{agencyOptions[key].description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 40 || player.stats.netWorth < agencyOptions[selectedAgency].cost} className="w-full py-4 text-lg bg-ios-red text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray">
                             Shoot Video
                         </button>
                     </div>
