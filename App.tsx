@@ -4,6 +4,8 @@ import { GameProvider, useGame } from './context/GameContext';
 import TopBar from './components/TopBar';
 import BottomNav from './components/BottomNav';
 import SplashScreen from './screens/SplashScreen';
+import MainMenuScreen from './screens/MainMenuScreen';
+import LoadGameScreen from './screens/LoadGameScreen';
 import CharacterCreationScreen from './screens/CharacterCreationScreen';
 import HomeScreen from './screens/HomeScreen';
 import JobScreen from './screens/JobScreen';
@@ -33,6 +35,10 @@ const AppContent: React.FC = () => {
     switch (state.gameStatus) {
       case GameStatus.SPLASH:
         return <SplashScreen />;
+      case GameStatus.MAIN_MENU:
+        return <MainMenuScreen />;
+      case GameStatus.LOAD_GAME:
+        return <LoadGameScreen />;
       case GameStatus.CHARACTER_CREATION:
         return <CharacterCreationScreen />;
       case GameStatus.ENDED:
@@ -41,7 +47,7 @@ const AppContent: React.FC = () => {
         return (
           <div className="w-full h-full max-w-md mx-auto bg-ios-bg flex flex-col font-sans">
             <TopBar />
-            <main className="flex-grow overflow-y-auto pb-20 pt-16 px-4">
+            <main className="flex-grow overflow-y-auto pb-24 pt-20 px-4">
               <Routes>
                 <Route path="/" element={<Navigate to="/home" />} />
                 <Route path="/home" element={<HomeScreen />} />
@@ -57,6 +63,8 @@ const AppContent: React.FC = () => {
             <BottomNav />
           </div>
         );
+      default:
+        return <SplashScreen />;
     }
   };
 

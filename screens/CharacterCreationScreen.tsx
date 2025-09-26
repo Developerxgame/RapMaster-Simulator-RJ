@@ -1,15 +1,14 @@
-
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
 import { ActionType } from '../types';
 
 const avatars = [
-  { id: 1, url: 'https://picsum.photos/seed/rapper1/200' },
-  { id: 2, url: 'https://picsum.photos/seed/rapper2/200' },
-  { id: 3, url: 'https://picsum.photos/seed/rapper3/200' },
-  { id: 4, url: 'https://picsum.photos/seed/rapper4/200' },
-  { id: 5, url: 'https://picsum.photos/seed/rapper5/200' },
-  { id: 6, url: 'https://picsum.photos/seed/rapper6/200' },
+  { id: 1, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-1' },
+  { id: 2, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-1' },
+  { id: 3, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-2' },
+  { id: 4, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-2' },
+  { id: 5, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-3' },
+  { id: 6, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-3' },
 ];
 
 const CharacterCreationScreen: React.FC = () => {
@@ -28,7 +27,7 @@ const CharacterCreationScreen: React.FC = () => {
       <h1 className="text-3xl font-bold text-ios-label">Create Your Rapper</h1>
       
       <div className="flex flex-col items-center space-y-4">
-        <img src={selectedAvatar} alt="Selected Avatar" className="w-32 h-32 rounded-full border-4 border-ios-blue" />
+        <img src={selectedAvatar} alt="Selected Avatar" className="w-32 h-32 rounded-full border-4 border-ios-blue bg-gray-700" />
         <div className="grid grid-cols-3 gap-4">
           {avatars.map(avatar => (
             <img 
@@ -36,7 +35,7 @@ const CharacterCreationScreen: React.FC = () => {
               src={avatar.url} 
               alt={`Avatar ${avatar.id}`}
               onClick={() => setSelectedAvatar(avatar.url)}
-              className={`w-16 h-16 rounded-full cursor-pointer transition-all duration-200 ${selectedAvatar === avatar.url ? 'border-2 border-ios-blue scale-110' : 'border-2 border-transparent'}`}
+              className={`w-16 h-16 rounded-full cursor-pointer transition-all duration-200 bg-gray-700 ${selectedAvatar === avatar.url ? 'border-2 border-ios-blue scale-110' : 'border-2 border-transparent'}`}
             />
           ))}
         </div>

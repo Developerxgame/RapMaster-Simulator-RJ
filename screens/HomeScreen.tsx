@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { ActionType } from '../types';
@@ -20,7 +19,7 @@ const HomeScreen: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="bg-ios-bg-secondary p-4 rounded-xl flex items-center space-x-4">
-        <img src={player.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full" />
+        <img src={player.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full bg-ios-gray" />
         <div>
           <h1 className="text-2xl font-bold">{player.stageName}</h1>
           <p className="text-ios-label-secondary">Up and coming artist</p>
@@ -45,7 +44,7 @@ const HomeScreen: React.FC = () => {
       
       <button
         onClick={handleAdvanceWeek}
-        className="w-full py-4 bg-ios-blue text-white font-bold rounded-lg shadow-md transition-transform transform hover:scale-105"
+        className="w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md transition-transform transform hover:scale-105"
       >
         Next Week
       </button>

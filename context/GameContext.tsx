@@ -1,8 +1,7 @@
 import React, { createContext, useReducer, useContext, Dispatch, ReactNode } from 'react';
-import { GameState, GameAction, ActionType, GameStatus, Player, Track, Album, MusicVideo } from '../types';
+import { GameState, GameAction, ActionType, GameStatus, Player, Track, Album, MusicVideo, SaveSlot } from '../types';
 
 const MAX_ENERGY = 100;
-const ENERGY_REGEN_PER_WEEK = 25;
 const FANS_PER_FAME_POINT = 10;
 const STREAMS_INCOME_RATE = 0.003; // $ per stream
 const ALBUM_PRICE = 5;
@@ -14,7 +13,7 @@ const initialState: GameState = {
   gameStatus: GameStatus.SPLASH,
   player: {
     stageName: 'Rookie',
-    avatarUrl: 'https://picsum.photos/seed/rapper1/200',
+    avatarUrl: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male1',
     stats: {
       fame: 0,
       reputation: 0,
@@ -166,8 +165,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         
         const trackQuality = state.discography.tracks.find(t => t.id === trackId)?.quality || 0;
         
-        // Incorporate marketing skill into MV quality
-        const marketingBonus = 1 + (state.player.skills.marketing / 200); // e.g., at level 100, it's a 1.5x bonus
+        const marketingBonus = 1 + (state.player.skills.marketing / 200);
         const baseQuality = trackQuality * (0.8 + (state.player.stats.fame + 1) / 10000);
         const mvQuality = Math.min(100, Math.floor(baseQuality * marketingBonus));
 
@@ -222,7 +220,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             return { ...state, gameStatus: GameStatus.ENDED };
         }
         
-        let newEnergy = Math.min(MAX_ENERGY, state.player.stats.energy + ENERGY_REGEN_PER_WEEK);
+        let newEnergy = MAX_ENERGY; // Energy now fully refills each week
         
         let streamIncome = 0;
         const updatedTracks = state.discography.tracks.map(t => {
@@ -264,7 +262,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             }
         }
 
-        return {
+        const newState = {
             ...state,
             gameDate: { week, year },
             player: {
@@ -286,6 +284,23 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             log: [...state.log.slice(-10), `Earned $${totalIncome.toFixed(2)} from music sales this week.`],
             history: newHistory
         };
+        
+        // Auto-save
+        try {
+            localStorage.setItem('saveSlot_auto', JSON.stringify(newState));
+            const meta: SaveSlot = {
+                slotId: 'auto',
+                saveDate: new Date().toLocaleString(),
+                stageName: newState.player.stageName,
+                year: newState.gameDate.year,
+                netWorth: newState.player.stats.netWorth,
+            };
+            localStorage.setItem('saveSlot_auto_meta', JSON.stringify(meta));
+        } catch (e) {
+            console.error("Failed to auto-save game", e);
+        }
+
+        return newState;
     }
     
     case ActionType.TRAIN_SKILL: {
@@ -312,6 +327,41 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             log: [...state.log, `Trained ${skill}, it's now level ${player.skills[skill] + 1}.`]
         }
     }
+
+    case ActionType.SAVE_GAME: {
+        const { slotId } = action.payload;
+        try {
+            const stateToSave = { ...state, gameStatus: GameStatus.PLAYING };
+            localStorage.setItem(`saveSlot_${slotId}`, JSON.stringify(stateToSave));
+            const meta: SaveSlot = {
+                slotId,
+                saveDate: new Date().toLocaleString(),
+                stageName: state.player.stageName,
+                year: state.gameDate.year,
+                netWorth: state.player.stats.netWorth,
+            };
+            localStorage.setItem(`saveSlot_${slotId}_meta`, JSON.stringify(meta));
+            return { ...state, log: [...state.log, `Game saved to slot ${slotId}.`] };
+        } catch (e) {
+            console.error("Failed to save game", e);
+            return { ...state, log: [...state.log, `Error: Could not save game.`] };
+        }
+    }
+
+    case ActionType.LOAD_GAME: {
+        return { ...action.payload.state, log: [...action.payload.state.log.slice(-10), 'Game loaded successfully.'] };
+    }
+
+    case ActionType.DELETE_SAVE: {
+        try {
+            localStorage.removeItem(`saveSlot_${action.payload.slotId}`);
+            localStorage.removeItem(`saveSlot_${action.payload.slotId}_meta`);
+        } catch (e) {
+            console.error("Failed to delete save", e);
+        }
+        return state;
+    }
+
 
     default:
       return state;

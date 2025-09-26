@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { ActionType, Player } from '../types';
@@ -45,7 +44,7 @@ const SkillsScreen: React.FC = () => {
                                 <button
                                     onClick={() => handleTrain(skillKey)}
                                     disabled={player.stats.netWorth < cost || player.stats.energy < 10 || level >= 100}
-                                    className="px-4 py-2 text-sm bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors"
+                                    className="px-5 py-2.5 text-sm bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors"
                                 >
                                     Train (${cost.toFixed(0)})
                                 </button>

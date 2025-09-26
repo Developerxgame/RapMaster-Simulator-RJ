@@ -1,5 +1,7 @@
 export enum GameStatus {
   SPLASH,
+  MAIN_MENU,
+  LOAD_GAME,
   CHARACTER_CREATION,
   PLAYING,
   ENDED,
@@ -77,6 +79,15 @@ export interface GameState {
   }
 }
 
+export interface SaveSlot {
+    slotId: string;
+    saveDate: string;
+    stageName: string;
+    year: number;
+    netWorth: number;
+}
+
+
 export enum ActionType {
   START_GAME = 'START_GAME',
   WORK_JOB = 'WORK_JOB',
@@ -88,7 +99,10 @@ export enum ActionType {
   ADVANCE_WEEK = 'ADVANCE_WEEK',
   TRAIN_SKILL = 'TRAIN_SKILL',
   END_GAME = 'END_GAME',
-  SET_STATUS = 'SET_STATUS'
+  SET_STATUS = 'SET_STATUS',
+  SAVE_GAME = 'SAVE_GAME',
+  LOAD_GAME = 'LOAD_GAME',
+  DELETE_SAVE = 'DELETE_SAVE',
 }
 
 export type GameAction =
@@ -102,4 +116,7 @@ export type GameAction =
   | { type: ActionType.POST_ON_SOCIAL_MEDIA, payload: { energyCost: number, fameGain: number } }
   | { type: ActionType.ADVANCE_WEEK }
   | { type: ActionType.TRAIN_SKILL, payload: { skill: keyof Player['skills'], cost: number, energyCost: number } }
-  | { type: ActionType.END_GAME };
+  | { type: ActionType.END_GAME }
+  | { type: ActionType.SAVE_GAME; payload: { slotId: string } }
+  | { type: ActionType.LOAD_GAME; payload: { state: GameState } }
+  | { type: ActionType.DELETE_SAVE; payload: { slotId: string } };

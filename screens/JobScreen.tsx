@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useGame } from '../context/GameContext';
 import { ActionType } from '../types';
@@ -54,7 +53,7 @@ const JobScreen: React.FC = () => {
                                 <button
                                     onClick={() => handleWork(job)}
                                     disabled={!canAfford || !isUnlocked}
-                                    className="px-4 py-2 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors"
+                                    className="px-6 py-3 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors text-base"
                                 >
                                     Work
                                 </button>
