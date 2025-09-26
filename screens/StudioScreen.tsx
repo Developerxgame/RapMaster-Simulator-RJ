@@ -8,7 +8,7 @@ type StudioTab = 'track' | 'album' | 'mv';
 
 const StudioScreen: React.FC = () => {
     const { state, dispatch } = useGame();
-    const { player, gameDate, discography } = state;
+    const { player, discography } = state;
     const [activeTab, setActiveTab] = useState<StudioTab>('track');
     
     // Track State
@@ -17,6 +17,7 @@ const StudioScreen: React.FC = () => {
     const [generatedLyrics, setGeneratedLyrics] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [animateRecord, setAnimateRecord] = useState(false);
+    const [error, setError] = useState('');
 
     // Album State
     const [albumTitle, setAlbumTitle] = useState('');
@@ -29,29 +30,31 @@ const StudioScreen: React.FC = () => {
     const releasedTracks = useMemo(() => discography.tracks.filter(t => t.isReleased), [discography.tracks]);
     const availableForAlbum = useMemo(() => discography.tracks.filter(t => !t.albumId), [discography.tracks]);
 
-
     const handleGenerateLyrics = async () => {
         setIsLoading(true);
+        setError('');
         const lyrics = await generateLyrics(lyricTopic);
         setGeneratedLyrics(lyrics);
         setIsLoading(false);
     };
 
     const handleCreateTrack = () => {
-        if (!trackTitle.trim() || player.stats.energy < 20) return;
+        setError('');
+        if (!trackTitle.trim()) {
+            setError('Track title cannot be empty.');
+            return;
+        }
+        if (player.stats.energy < 20) {
+            setError('Not enough energy.');
+            return;
+        }
+        const isDuplicate = discography.tracks.some(t => t.title.toLowerCase() === trackTitle.trim().toLowerCase());
+        if(isDuplicate){
+            setError('A track with this title already exists.');
+            return;
+        }
 
-        const quality = Math.floor(
-            (player.skills.lyricism + player.skills.flow + player.skills.production) / 3 * 
-            (Math.random() * 0.4 + 0.8) // 80-120% variance
-        );
-        
-        const newTrack: Omit<Track, 'streams' | 'isReleased' | 'albumId' | 'releaseWeek' | 'releaseYear'> = {
-            id: `track-${Date.now()}`,
-            title: trackTitle,
-            quality: Math.min(100, Math.max(1, quality)),
-        };
-
-        dispatch({ type: ActionType.CREATE_TRACK, payload: { track: newTrack, energyCost: 20 } });
+        dispatch({ type: ActionType.CREATE_TRACK, payload: { title: trackTitle.trim(), energyCost: 20 } });
         setTrackTitle('');
         setLyricTopic('');
         setGeneratedLyrics('');
@@ -80,7 +83,9 @@ const StudioScreen: React.FC = () => {
         if (!selectedTrackForMV || player.stats.energy < 40) return;
         const track = releasedTracks.find(t => t.id === selectedTrackForMV);
         if (!track) return;
-        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: track.title, energyCost: 40 } });
+        
+        const mvTitle = `${track.title} - Official Music Video`;
+        dispatch({ type: ActionType.CREATE_MV, payload: { trackId: track.id, trackTitle: mvTitle, energyCost: 40 } });
         setSelectedTrackForMV('');
     };
     
@@ -145,6 +150,8 @@ const StudioScreen: React.FC = () => {
                                 <p className="text-sm font-mono whitespace-pre-wrap">{generatedLyrics}</p>
                             </div>
                         )}
+                        
+                        {error && <p className="text-sm text-ios-red text-center">{error}</p>}
                         
                         <button onClick={handleCreateTrack} disabled={!trackTitle.trim() || player.stats.energy < 20} className={`w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray ${animateRecord ? 'animate-pulse' : ''}`}>
                             Record Track

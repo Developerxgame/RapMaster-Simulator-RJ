@@ -16,6 +16,7 @@ import StatsScreen from './screens/StatsScreen';
 import SkillsScreen from './screens/SkillsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import EndScreen from './screens/EndScreen';
+import EventModal from './components/EventModal';
 import { GameStatus } from './types';
 
 const App: React.FC = () => {
@@ -45,7 +46,7 @@ const AppContent: React.FC = () => {
         return <EndScreen />;
       case GameStatus.PLAYING:
         return (
-          <div className="w-full h-full max-w-md mx-auto bg-ios-bg flex flex-col font-sans">
+          <div className="w-full h-full max-w-md mx-auto bg-ios-bg flex flex-col font-sans relative">
             <TopBar />
             <main className="flex-grow overflow-y-auto pb-24 pt-20 px-4">
               <Routes>
@@ -61,6 +62,7 @@ const AppContent: React.FC = () => {
               </Routes>
             </main>
             <BottomNav />
+            {state.activeEvent && <EventModal event={state.activeEvent} />}
           </div>
         );
       default:

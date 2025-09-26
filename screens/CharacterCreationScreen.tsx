@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useGame } from '../context/GameContext';
-import { ActionType } from '../types';
+import { ActionType, GameStatus } from '../types';
 
 const avatars = [
-  { id: 1, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-1' },
-  { id: 2, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-1' },
-  { id: 3, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-2' },
-  { id: 4, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-2' },
-  { id: 5, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=male-3' },
-  { id: 6, url: 'https://api.dicebear.com/8.x/adventurer/svg?seed=female-3' },
+  { id: 1, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper1' },
+  { id: 2, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper2' },
+  { id: 3, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper3' },
+  { id: 4, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper4' },
+  { id: 5, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper5' },
+  { id: 6, url: 'https://api.dicebear.com/8.x/lorelei/svg?seed=rapper6' },
 ];
 
 const CharacterCreationScreen: React.FC = () => {
@@ -22,8 +22,12 @@ const CharacterCreationScreen: React.FC = () => {
     }
   };
 
+  const handleBack = () => {
+    dispatch({ type: ActionType.SET_STATUS, payload: GameStatus.MAIN_MENU });
+  }
+
   return (
-    <div className="w-full h-full max-w-md mx-auto bg-ios-bg flex flex-col items-center justify-center p-6 space-y-8">
+    <div className="w-full h-full max-w-md mx-auto bg-ios-bg flex flex-col items-center justify-center p-6 space-y-6">
       <h1 className="text-3xl font-bold text-ios-label">Create Your Rapper</h1>
       
       <div className="flex flex-col items-center space-y-4">
@@ -53,13 +57,21 @@ const CharacterCreationScreen: React.FC = () => {
         />
       </div>
 
-      <button
-        onClick={handleStartCareer}
-        disabled={!stageName.trim()}
-        className="w-full py-4 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors"
-      >
-        Start Career
-      </button>
+      <div className="w-full space-y-3">
+        <button
+          onClick={handleStartCareer}
+          disabled={!stageName.trim()}
+          className="w-full py-4 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors"
+        >
+          Start Career
+        </button>
+        <button
+          onClick={handleBack}
+          className="w-full py-3 bg-ios-gray text-white font-semibold rounded-lg"
+        >
+          Back
+        </button>
+      </div>
     </div>
   );
 };

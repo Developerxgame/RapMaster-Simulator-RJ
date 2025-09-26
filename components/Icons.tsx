@@ -139,6 +139,11 @@ export const HeartIcon = (props: IconProps) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
     </svg>
 );
+export const HeartIconSolid = (props: IconProps) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+        <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-1.344-.688 15.182 15.182 0 01-2.06-1.717 15.154 15.154 0 01-2.57-2.617c-1.223-1.543-1.92-3.32-1.92-5.117 0-3.11 2.54-5.65 5.65-5.65 1.954 0 3.652 1.01 4.5 2.583 1.04-1.986 2.93-3.235 5.09-3.235 3.22 0 5.84 2.61 5.84 5.84 0 1.79-1.045 3.48-2.67 5.174a15.15 15.15 0 01-4.72 4.311l-.062.042-.018.012-.006.004-.007.003-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+    </svg>
+);
 export const ChatBubbleIcon = (props: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.722.257c-.247.017-.49.034-.731.051l-1.48.082a6.736 6.736 0 01-3.465 0l-1.48-.082a12.724 12.724 0 01-.731-.051l-3.722-.257A2.25 2.25 0 013 15.25v-4.286c0-.97.616-1.813 1.5-2.097" />
@@ -169,7 +174,7 @@ export const RapTubeIcon = (props: IconProps) => (
 );
 export const ChevronRightIcon = (props: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
     </svg>
 );
 export const TrashIcon = (props: IconProps) => (
@@ -182,3 +187,8 @@ export const PlayIcon = (props: IconProps) => (
         <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm14.024-.983a1.125 1.125 0 010 1.966l-5.603 3.113A1.125 1.125 0 019 15.113V8.887c0-.857.921-1.4 1.671-.983l5.603 3.113z" clipRule="evenodd" />
     </svg>
 );
+export const MegaphoneIcon = (props: IconProps) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+    </svg>
+  );

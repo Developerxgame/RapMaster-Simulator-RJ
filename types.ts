@@ -20,6 +20,11 @@ export interface GameDate {
   week: number;
 }
 
+export interface Promotion {
+    isActive: boolean;
+    weeksLeft: number;
+}
+
 export interface Track {
   id: string;
   title: string;
@@ -29,6 +34,8 @@ export interface Track {
   albumId: string | null;
   releaseWeek: number | null;
   releaseYear: number | null;
+  revenue: number;
+  promotion: Promotion;
 }
 
 export interface Album {
@@ -38,6 +45,8 @@ export interface Album {
   sales: number;
   releaseWeek: number;
   releaseYear: number;
+  revenue: number;
+  promotion: Promotion;
 }
 
 export interface MusicVideo {
@@ -46,6 +55,8 @@ export interface MusicVideo {
     trackTitle: string;
     quality: number; // 0-100
     views: number;
+    revenue: number;
+    promotion: Promotion;
 }
 
 export interface Player {
@@ -58,6 +69,42 @@ export interface Player {
     production: number;
     marketing: number;
   };
+  ownedItemIds: string[];
+  studioEquipment: {
+    mic: number; // level
+    audio: number; // level
+    software: number; // level
+  };
+}
+
+export interface RapGramComment {
+    username: string;
+    text: string;
+    avatarUrl: string;
+    createdAt: number;
+}
+
+export interface RapGramPost {
+    id: string;
+    text: string;
+    imageUrl: string;
+    likes: number;
+    comments: RapGramComment[];
+    isLiked: boolean;
+    isCommented: boolean;
+    createdAt: number;
+}
+
+export interface GameEventChoice {
+    text: string;
+    effects: Partial<PlayerStats> & { log: string };
+}
+
+export interface GameEvent {
+    id: string;
+    title: string;
+    description: string;
+    choices: GameEventChoice[];
 }
 
 export interface GameState {
@@ -76,7 +123,9 @@ export interface GameState {
           fans: number;
           netWorth: number;
       }
-  }
+  };
+  socialFeed: RapGramPost[];
+  activeEvent: GameEvent | null;
 }
 
 export interface SaveSlot {
@@ -87,6 +136,25 @@ export interface SaveSlot {
     netWorth: number;
 }
 
+export enum ItemCategory {
+    LIFESTYLE = 'LIFESTYLE',
+    STUDIO = 'STUDIO',
+}
+
+export interface ShopItem {
+    id: string;
+    name: string;
+    category: ItemCategory;
+    cost: number;
+    description: string;
+    // For LIFESTYLE items
+    fameBonus?: number;
+    repBonus?: number;
+    // For STUDIO items
+    equipmentType?: keyof Player['studioEquipment'];
+    qualityBonus?: number;
+}
+
 
 export enum ActionType {
   START_GAME = 'START_GAME',
@@ -95,28 +163,38 @@ export enum ActionType {
   RELEASE_TRACK = 'RELEASE_TRACK',
   CREATE_ALBUM = 'CREATE_ALBUM',
   CREATE_MV = 'CREATE_MV',
-  POST_ON_SOCIAL_MEDIA = 'POST_ON_SOCIAL_MEDIA',
+  CREATE_RAPGRAM_POST = 'CREATE_RAPGRAM_POST',
+  LIKE_POST = 'LIKE_POST',
+  COMMENT_ON_POST = 'COMMENT_ON_POST',
+  PROMOTE_RELEASE = 'PROMOTE_RELEASE',
   ADVANCE_WEEK = 'ADVANCE_WEEK',
   TRAIN_SKILL = 'TRAIN_SKILL',
+  BUY_ITEM = 'BUY_ITEM',
   END_GAME = 'END_GAME',
   SET_STATUS = 'SET_STATUS',
   SAVE_GAME = 'SAVE_GAME',
   LOAD_GAME = 'LOAD_GAME',
   DELETE_SAVE = 'DELETE_SAVE',
+  RESOLVE_EVENT = 'RESOLVE_EVENT',
 }
 
 export type GameAction =
   | { type: ActionType.START_GAME; payload: { stageName: string; avatarUrl: string } }
   | { type: ActionType.SET_STATUS; payload: GameStatus }
   | { type: ActionType.WORK_JOB; payload: { money: number; energyCost: number; fameGain: number } }
-  | { type: ActionType.CREATE_TRACK; payload: { track: Omit<Track, 'streams' | 'isReleased' | 'albumId' | 'releaseWeek' | 'releaseYear'>, energyCost: number } }
+  | { type: ActionType.CREATE_TRACK; payload: { title: string, energyCost: number } }
   | { type: ActionType.RELEASE_TRACK; payload: { trackId: string } }
   | { type: ActionType.CREATE_ALBUM; payload: { title: string, trackIds: string[], energyCost: number } }
   | { type: ActionType.CREATE_MV; payload: { trackId: string, trackTitle: string, energyCost: number } }
-  | { type: ActionType.POST_ON_SOCIAL_MEDIA, payload: { energyCost: number, fameGain: number } }
+  | { type: ActionType.CREATE_RAPGRAM_POST, payload: { energyCost: number } }
+  | { type: ActionType.LIKE_POST, payload: { postId: string, energyCost: number } }
+  | { type: ActionType.COMMENT_ON_POST, payload: { postId: string, energyCost: number } }
+  | { type: ActionType.PROMOTE_RELEASE, payload: { releaseId: string, type: 'track' | 'album' | 'mv', cost: number } }
   | { type: ActionType.ADVANCE_WEEK }
   | { type: ActionType.TRAIN_SKILL, payload: { skill: keyof Player['skills'], cost: number, energyCost: number } }
+  | { type: ActionType.BUY_ITEM, payload: { item: ShopItem } }
   | { type: ActionType.END_GAME }
   | { type: ActionType.SAVE_GAME; payload: { slotId: string } }
   | { type: ActionType.LOAD_GAME; payload: { state: GameState } }
-  | { type: ActionType.DELETE_SAVE; payload: { slotId: string } };
+  | { type: ActionType.DELETE_SAVE; payload: { slotId: string } }
+  | { type: ActionType.RESOLVE_EVENT; payload: { choice: GameEventChoice } };
