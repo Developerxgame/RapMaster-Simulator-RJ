@@ -192,3 +192,11 @@ export const MegaphoneIcon = (props: IconProps) => (
       <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
     </svg>
   );
+export const PaintBrushIcon = (props: IconProps) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12a7.5 7.5 0 0015 0m-15 0a7.5 7.5 0 1115 0m-15 0H3m18 0h-1.5m-15 0a7.5 7.5 0 1115 0m-15 0H3m18 0h-1.5m-15 0a7.5 7.5 0 1115 0m-15 0H3m18 0h-1.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v.01M12 8.25v.01M12 12v.01M12 15.75v.01M12 19.5v.01" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16.125 4.5v.01M16.125 8.25v.01M16.125 12v.01M16.125 15.75v.01M16.125 19.5v.01" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.875 4.5v.01M7.875 8.25v.01M7.875 12v.01M7.875 15.75v.01M7.875 19.5v.01" />
+    </svg>
+);

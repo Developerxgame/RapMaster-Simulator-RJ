@@ -16,7 +16,6 @@ import StatsScreen from './screens/StatsScreen';
 import SkillsScreen from './screens/SkillsScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import EndScreen from './screens/EndScreen';
-import EventModal from './components/EventModal';
 import { GameStatus } from './types';
 
 const App: React.FC = () => {
@@ -62,7 +61,6 @@ const AppContent: React.FC = () => {
               </Routes>
             </main>
             <BottomNav />
-            {state.activeEvent && <EventModal event={state.activeEvent} />}
           </div>
         );
       default:

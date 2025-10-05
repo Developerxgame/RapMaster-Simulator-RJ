@@ -1,5 +1,5 @@
 import React, { createContext, useReducer, useContext, Dispatch, ReactNode } from 'react';
-import { GameState, GameAction, ActionType, GameStatus, Player, Track, Album, MusicVideo, SaveSlot, RapGramPost, ShopItem, ItemCategory, GameEvent, GameEventChoice } from '../types';
+import { GameState, GameAction, ActionType, GameStatus, Player, Track, Album, MusicVideo, SaveSlot, RapGramPost, ShopItem, ItemCategory } from '../types';
 import { shopItems } from '../screens/ShopScreen'; 
 
 const MAX_ENERGY = 100;
@@ -10,7 +10,6 @@ const ALBUM_PRICE = 3;
 const ALBUM_SALES_FACTOR = 0.5;
 const MV_VIEWS_FACTOR = 1.2;
 const END_YEAR = 2060;
-const EVENT_CHANCE_PER_WEEK = 0.25;
 
 const MAX_FAME = 100;
 const MAX_REPUTATION = 100;
@@ -40,37 +39,6 @@ const PROMOTION_MULTIPLIERS = {
     premium: 2.0
 };
 
-
-const gameEvents: GameEvent[] = [
-    {
-        id: 'event1',
-        title: "Surprise Interview",
-        description: "A popular hip-hop blog wants to interview you. This could be a big break, but it will take up your time.",
-        choices: [
-            { text: "Do the interview (-15 Energy)", effects: { fame: 5, energy: -15, log: "The interview was a success! Gained 5 fame." } },
-            { text: "Decline politely", effects: { reputation: 1, log: "You declined the interview to focus on music. +1 Reputation." } },
-        ]
-    },
-    {
-        id: 'event2',
-        title: "Fan Encounter",
-        description: "You run into a group of dedicated fans on the street. They ask for a picture.",
-        choices: [
-            { text: "Take the picture (+2 Fame)", effects: { fame: 2, log: "Your fans loved the interaction! +2 Fame." } },
-            { text: "Pretend you're busy (-1 Reputation)", effects: { reputation: -1, log: "You ignored your fans. That's not a good look. -1 Reputation." } },
-        ]
-    },
-    {
-        id: 'event3',
-        title: "Collaboration Offer",
-        description: "A slightly more famous local artist wants you to feature on their track.",
-        choices: [
-            { text: "Accept (-$500, +10 Fame)", effects: { netWorth: -500, fame: 10, log: "The collab was a hit! Gained 10 fame." } },
-            { text: "Decline", effects: { log: "You decided to focus on your own work." } },
-        ]
-    }
-];
-
 const rapGramImageUrls = [
     'https://images.unsplash.com/photo-1590602843623-3f1819c3c0a4?q=80&w=800&auto=format&fit=crop', // Studio mic
     'https://images.unsplash.com/photo-1608229245345-356103f53940?q=80&w=800&auto=format&fit=crop', // Soundboard
@@ -92,7 +60,7 @@ const initialState: GameState = {
       fame: 0,
       reputation: 0,
       fans: 0,
-      netWorth: 0,
+      netWorth: 1000,
       energy: MAX_ENERGY,
     },
     skills: {
@@ -106,6 +74,9 @@ const initialState: GameState = {
         mic: 0,
         audio: 0,
         software: 0,
+    },
+    socialMedia: {
+        rapGramUsername: null,
     },
     careerLevel: 1,
     careerXp: 0,
@@ -122,7 +93,6 @@ const initialState: GameState = {
   log: ["Welcome to RapMaster Simulator! It's time to start your career."],
   history: {},
   socialFeed: [],
-  activeEvent: null,
   weeksSinceLastRelease: 0,
 };
 
@@ -171,12 +141,10 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     }
     
     let passiveFameBonus = 0;
-    let passiveRepBonus = 0;
     state.player.ownedItemIds.forEach(itemId => {
         const item = shopItems.find(i => i.id === itemId);
         if(item && item.category === ItemCategory.LIFESTYLE){
             passiveFameBonus += item.fameBonus || 0;
-            passiveRepBonus += item.repBonus || 0;
         }
     });
     
@@ -196,8 +164,9 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     });
 
     const updatedAlbums = state.discography.albums.map(a => {
+        if(!a.isReleased) return a;
         const promotionMultiplier = a.promotion.isActive ? PROMOTION_MULTIPLIERS[a.promotion.tier!] : 1;
-        const weeksSinceRelease = (year - a.releaseYear) * 52 + (week - a.releaseWeek);
+        const weeksSinceRelease = (year - a.releaseYear!) * 52 + (week - a.releaseWeek!);
         const salesDecay = Math.max(0.1, Math.pow(0.95, weeksSinceRelease));
         const newSales = Math.floor((state.player.stats.fame + 1) * ALBUM_SALES_FACTOR * (1 + state.player.skills.marketing / 100) * (Math.random() * 0.5 + 0.75) * salesDecay * promotionMultiplier * levelMultipliers.sales);
         const albumIncome = newSales * ALBUM_PRICE;
@@ -208,6 +177,7 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     
     let fameFromMVs = 0;
     const updatedMVs = state.discography.musicVideos.map(mv => {
+        if(!mv.isReleased) return mv;
         const promotionMultiplier = mv.promotion.isActive ? PROMOTION_MULTIPLIERS[mv.promotion.tier!] : 1;
         const newViews = Math.floor(mv.quality * (state.player.stats.fame + 1) * MV_VIEWS_FACTOR * (1 + state.player.skills.marketing / 100) * promotionMultiplier * levelMultipliers.streamsViews);
         const mvIncome = newViews * MV_VIEWS_INCOME_RATE;
@@ -219,7 +189,7 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     
     const baseFameGrowth = Math.floor(totalIncome / 2000) + fameFromMVs + passiveFameBonus;
     const fameGrowth = Math.floor(baseFameGrowth * levelMultipliers.fameRep);
-    const repGrowth = Math.floor(passiveRepBonus * levelMultipliers.fameRep);
+    const repGrowth = 0; // Reputation from items is a one-time bonus on purchase, not weekly.
     
     const newFame = Math.min(MAX_FAME, Math.max(0, state.player.stats.fame + fameGrowth - fameDecay));
     const newRep = Math.min(MAX_REPUTATION, Math.max(0, state.player.stats.reputation + repGrowth - repDecay));
@@ -302,6 +272,24 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
     }
     
+    case ActionType.PERFORM_CONCERT: {
+        const { money, energyCost, fameGain } = action.payload;
+        if (state.player.stats.energy < energyCost) return state;
+        return {
+            ...state,
+            player: {
+                ...state.player,
+                stats: {
+                    ...state.player.stats,
+                    netWorth: state.player.stats.netWorth + money,
+                    energy: state.player.stats.energy - energyCost,
+                    fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain),
+                }
+            },
+            log: [...state.log, `Performed a concert, earning $${money} and gaining ${fameGain} fame!`]
+        };
+    }
+
     case ActionType.CREATE_TRACK: {
         const { title, energyCost, beatType, cost } = action.payload;
         if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
@@ -369,36 +357,59 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const newAlbum: Album = {
             id: `album-${Date.now()}`, title, trackIds, sales: 0,
-            releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year,
+            isReleased: false, releaseWeek: null, releaseYear: null,
             revenue: 0, promotion: { isActive: false, weeksLeft: 0, tier: null },
         };
-
-        const fameBoost = releaseType === 'premium' ? 10 : 0;
-        const repBoost = releaseType === 'premium' ? 2 : 0;
         
         const stateWithXp = addXp(state, XP_GAINS.ALBUM_RELEASE);
 
         return {
             ...stateWithXp,
-            weeksSinceLastRelease: 0,
             player: {
                 ...stateWithXp.player,
                 stats: { 
                     ...stateWithXp.player.stats, 
                     energy: stateWithXp.player.stats.energy - energyCost,
                     netWorth: stateWithXp.player.stats.netWorth - cost,
-                    fame: Math.min(MAX_FAME, stateWithXp.player.stats.fame + fameBoost),
-                    reputation: Math.min(MAX_REPUTATION, stateWithXp.player.stats.reputation + repBoost),
                 }
             },
             discography: {
                 ...stateWithXp.discography,
                 albums: [...stateWithXp.discography.albums, newAlbum],
                 tracks: stateWithXp.discography.tracks.map(t => trackIds.includes(t.id) ? {
-                    ...t, albumId: newAlbum.id, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
+                    ...t, albumId: newAlbum.id 
                 } : t),
             },
-            log: [...stateWithXp.log, `Released a new album: "${title}". ${fameBoost > 0 ? 'The premium release generated some buzz!' : ''}`]
+            log: [...stateWithXp.log, `Created a new album: "${title}". It's in the vault, ready for release.`]
+        }
+    }
+    
+    case ActionType.RELEASE_ALBUM: {
+        const albumToRelease = state.discography.albums.find(a => a.id === action.payload.albumId);
+        if (!albumToRelease) return state;
+
+        const fameBoost = 10;
+        const repBoost = 2;
+
+        return {
+            ...state,
+            weeksSinceLastRelease: 0,
+             player: {
+                ...state.player,
+                stats: { 
+                    ...state.player.stats, 
+                    fame: Math.min(MAX_FAME, state.player.stats.fame + fameBoost),
+                    reputation: Math.min(MAX_REPUTATION, state.player.stats.reputation + repBoost),
+                }
+            },
+            discography: {
+                ...state.discography,
+                albums: state.discography.albums.map(a => a.id === action.payload.albumId ? {...a, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year} : a),
+                tracks: state.discography.tracks.map(t => albumToRelease.trackIds.includes(t.id) ? {
+                    ...t, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
+                } : t),
+            },
+            log: [...state.log, `Released album "${albumToRelease.title}", gaining some buzz.`]
         }
     }
 
@@ -409,37 +420,71 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const agencyMultipliers = { low: 0.8, mid: 1.0, high: 1.3, premium: 1.8 };
         const agencyMultiplier = agencyMultipliers[agency];
 
+        const micBonus = state.player.studioEquipment.mic;
+        const audioBonus = state.player.studioEquipment.audio;
+        const softwareBonus = state.player.studioEquipment.software;
+        const equipmentBonus = micBonus + audioBonus + softwareBonus;
+
         const trackQuality = state.discography.tracks.find(t => t.id === trackId)?.quality || 0;
         const marketingBonus = 1 + (state.player.skills.marketing / 200);
-        const baseQuality = trackQuality * (0.8 + (state.player.stats.fame + 1) / 100);
+        const baseQuality = (trackQuality + equipmentBonus / 2) * (0.8 + (state.player.stats.fame + 1) / 100);
         const mvQuality = Math.min(100, Math.floor(baseQuality * marketingBonus * agencyMultiplier));
 
         const newMv: MusicVideo = {
             id: `mv-${Date.now()}`, trackId, trackTitle, quality: mvQuality, views: 0,
-            revenue: 0, promotion: { isActive: false, weeksLeft: 0, tier: null }, agency
+            revenue: 0, promotion: { isActive: false, weeksLeft: 0, tier: null }, agency,
+            isReleased: false, releaseWeek: null, releaseYear: null,
         };
 
-        const fameGain = agency === 'premium' ? Math.floor(Math.random() * 5) + 5 : 0; // big initial boost for premium
-        
         const stateWithXp = addXp(state, XP_GAINS.MV_RELEASE);
 
         return {
             ...stateWithXp,
-            weeksSinceLastRelease: 0,
              player: {
                 ...stateWithXp.player,
                 stats: { 
                     ...stateWithXp.player.stats,
                     energy: stateWithXp.player.stats.energy - energyCost,
                     netWorth: stateWithXp.player.stats.netWorth - cost,
-                    fame: Math.min(MAX_FAME, stateWithXp.player.stats.fame + fameGain),
                 }
             },
             discography: { ...stateWithXp.discography, musicVideos: [...stateWithXp.discography.musicVideos, newMv] },
-            log: [...stateWithXp.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}. ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
+            log: [...stateWithXp.log, `Shot a music video for "${trackTitle}" with quality ${mvQuality}. It's ready to be released.`]
         }
     }
+
+    case ActionType.RELEASE_MV: {
+        const mvToRelease = state.discography.musicVideos.find(mv => mv.id === action.payload.mvId);
+        if (!mvToRelease) return state;
+
+        const fameGain = mvToRelease.agency === 'premium' ? Math.floor(Math.random() * 5) + 5 : 0; // big initial boost for premium
+
+        return {
+            ...state,
+            weeksSinceLastRelease: 0,
+            player: {
+                ...state.player,
+                stats: {
+                    ...state.player.stats,
+                    fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain),
+                }
+            },
+            discography: {
+                ...state.discography,
+                musicVideos: state.discography.musicVideos.map(mv => mv.id === action.payload.mvId ? {...mv, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year} : mv)
+            },
+            log: [...state.log, `Released music video for "${mvToRelease.trackTitle}". ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
+        };
+    }
     
+    case ActionType.CREATE_SOCIAL_PROFILE: {
+        return {
+            ...state,
+            player: {...state.player, socialMedia: { rapGramUsername: action.payload.username }},
+            log: [...state.log, `Created RapGram profile: @${action.payload.username}`],
+        }
+    }
+
     case ActionType.CREATE_RAPGRAM_POST: {
         const { energyCost } = action.payload;
         if (state.player.stats.energy < energyCost) return state;
@@ -513,7 +558,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         if(repGain > 0) logMessage += ` Gained ${repGain} reputation!`;
         
         const newComment = {
-            username: state.player.stageName,
+            username: state.player.socialMedia.rapGramUsername || state.player.stageName,
             text: "Let's get it!",
             avatarUrl: state.player.avatarUrl,
             createdAt: Date.now(),
@@ -554,41 +599,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     }
 
     case ActionType.ADVANCE_WEEK: {
-        if (state.activeEvent) return state;
-
-        if (Math.random() < EVENT_CHANCE_PER_WEEK) {
-            const event = gameEvents[Math.floor(Math.random() * gameEvents.length)];
-            return { ...state, activeEvent: event };
-        }
-        
         return processWeeklyUpdate(state);
-    }
-
-    case ActionType.RESOLVE_EVENT: {
-        const { choice } = action.payload;
-        const { effects } = choice;
-        
-        const currentStats = state.player.stats;
-        const newStats = {
-            ...currentStats,
-            fame: Math.min(MAX_FAME, currentStats.fame + (effects.fame || 0)),
-            reputation: Math.min(MAX_REPUTATION, currentStats.reputation + (effects.reputation || 0)),
-            fans: currentStats.fans + (effects.fans || 0),
-            netWorth: currentStats.netWorth + (effects.netWorth || 0),
-            energy: Math.max(0, currentStats.energy + (effects.energy || 0)),
-        }
-
-        const stateAfterEvent = {
-            ...state,
-            player: {
-                ...state.player,
-                stats: newStats
-            },
-            log: [...state.log, effects.log],
-            activeEvent: null,
-        }
-
-        return processWeeklyUpdate(stateAfterEvent);
     }
     
     case ActionType.TRAIN_SKILL: {
@@ -650,7 +661,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case ActionType.SAVE_GAME: {
         const { slotId } = action.payload;
         try {
-            const stateToSave = { ...state, gameStatus: GameStatus.PLAYING, activeEvent: null };
+            const stateToSave = { ...state, gameStatus: GameStatus.PLAYING };
             localStorage.setItem(`saveSlot_${slotId}`, JSON.stringify(stateToSave));
             const meta: SaveSlot = {
                 slotId, saveDate: new Date().toLocaleString(), stageName: state.player.stageName,

@@ -44,8 +44,9 @@ export interface Album {
   title: string;
   trackIds: string[];
   sales: number;
-  releaseWeek: number;
-  releaseYear: number;
+  isReleased: boolean;
+  releaseWeek: number | null;
+  releaseYear: number | null;
   revenue: number;
   promotion: Promotion;
 }
@@ -57,6 +58,9 @@ export interface MusicVideo {
     quality: number; // 0-100
     views: number;
     revenue: number;
+    isReleased: boolean;
+    releaseWeek: number | null;
+    releaseYear: number | null;
     promotion: Promotion;
     agency: 'low' | 'mid' | 'high' | 'premium';
 }
@@ -76,6 +80,9 @@ export interface Player {
     mic: number; // level
     audio: number; // level
     software: number; // level
+  };
+  socialMedia: {
+    rapGramUsername: string | null;
   };
   careerLevel: number;
   careerXp: number;
@@ -99,18 +106,6 @@ export interface RapGramPost {
     createdAt: number;
 }
 
-export interface GameEventChoice {
-    text: string;
-    effects: Partial<PlayerStats> & { log: string };
-}
-
-export interface GameEvent {
-    id: string;
-    title: string;
-    description: string;
-    choices: GameEventChoice[];
-}
-
 export interface GameState {
   gameStatus: GameStatus;
   player: Player;
@@ -129,7 +124,6 @@ export interface GameState {
       }
   };
   socialFeed: RapGramPost[];
-  activeEvent: GameEvent | null;
   weeksSinceLastRelease: number;
 }
 
@@ -164,11 +158,15 @@ export interface ShopItem {
 export enum ActionType {
   START_GAME = 'START_GAME',
   WORK_JOB = 'WORK_JOB',
+  PERFORM_CONCERT = 'PERFORM_CONCERT',
   CREATE_TRACK = 'CREATE_TRACK',
   RELEASE_TRACK = 'RELEASE_TRACK',
   CREATE_ALBUM = 'CREATE_ALBUM',
+  RELEASE_ALBUM = 'RELEASE_ALBUM',
   CREATE_MV = 'CREATE_MV',
+  RELEASE_MV = 'RELEASE_MV',
   CREATE_RAPGRAM_POST = 'CREATE_RAPGRAM_POST',
+  CREATE_SOCIAL_PROFILE = 'CREATE_SOCIAL_PROFILE',
   LIKE_POST = 'LIKE_POST',
   COMMENT_ON_POST = 'COMMENT_ON_POST',
   PROMOTE_RELEASE = 'PROMOTE_RELEASE',
@@ -180,17 +178,20 @@ export enum ActionType {
   SAVE_GAME = 'SAVE_GAME',
   LOAD_GAME = 'LOAD_GAME',
   DELETE_SAVE = 'DELETE_SAVE',
-  RESOLVE_EVENT = 'RESOLVE_EVENT',
 }
 
 export type GameAction =
   | { type: ActionType.START_GAME; payload: { stageName: string; avatarUrl: string } }
   | { type: ActionType.SET_STATUS; payload: GameStatus }
   | { type: ActionType.WORK_JOB; payload: { money: number; energyCost: number; fameGain: number } }
+  | { type: ActionType.PERFORM_CONCERT; payload: { money: number; energyCost: number; fameGain: number } }
   | { type: ActionType.CREATE_TRACK; payload: { title: string; energyCost: number; beatType: 'free' | 'premium'; cost: number } }
   | { type: ActionType.RELEASE_TRACK; payload: { trackId: string } }
   | { type: ActionType.CREATE_ALBUM; payload: { title: string; trackIds: string[]; energyCost: number; releaseType: 'default' | 'premium'; cost: number } }
+  | { type: ActionType.RELEASE_ALBUM; payload: { albumId: string } }
   | { type: ActionType.CREATE_MV; payload: { trackId: string; trackTitle: string; energyCost: number; agency: 'low' | 'mid' | 'high' | 'premium'; cost: number } }
+  | { type: ActionType.RELEASE_MV; payload: { mvId: string } }
+  | { type: ActionType.CREATE_SOCIAL_PROFILE, payload: { username: string } }
   | { type: ActionType.CREATE_RAPGRAM_POST, payload: { energyCost: number } }
   | { type: ActionType.LIKE_POST, payload: { postId: string, energyCost: number } }
   | { type: ActionType.COMMENT_ON_POST, payload: { postId: string, energyCost: number } }
@@ -201,5 +202,4 @@ export type GameAction =
   | { type: ActionType.END_GAME }
   | { type: ActionType.SAVE_GAME; payload: { slotId: string } }
   | { type: ActionType.LOAD_GAME; payload: { state: GameState } }
-  | { type: ActionType.DELETE_SAVE; payload: { slotId: string } }
-  | { type: ActionType.RESOLVE_EVENT; payload: { choice: GameEventChoice } };
+  | { type: ActionType.DELETE_SAVE; payload: { slotId: string } };

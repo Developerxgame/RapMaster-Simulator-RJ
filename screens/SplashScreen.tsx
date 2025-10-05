@@ -12,10 +12,10 @@ const SplashScreen: React.FC = () => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 text-center animated-gradient">
       <div className="animate-fade-in-down">
-        <h1 className="text-6xl font-black text-white" style={{textShadow: '0 0 15px #0A84FF, 0 0 25px #0A84FF'}}>
+        <h1 className="text-8xl text-rapmaster">
           RapMaster
         </h1>
-        <h2 className="text-4xl font-light text-ios-blue tracking-widest">
+        <h2 className="text-4xl font-light text-ios-blue tracking-widest" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.5)'}}>
           SIMULATOR
         </h2>
       </div>
