@@ -21,7 +21,7 @@ const EndScreen: React.FC = () => {
                 After a long and successful career, {player.stageName} has retired at age 60. Here's the final summary.
             </p>
 
-            <div className="w-full bg-ios-bg-secondary p-6 rounded-xl space-y-4">
+            <div className="w-full ios-card p-6 space-y-4">
                 <h2 className="text-xl font-semibold">Final Stats</h2>
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-2 rounded-lg bg-black">
@@ -53,7 +53,7 @@ const EndScreen: React.FC = () => {
 
             <button
                 onClick={handlePlayAgain}
-                className="w-full py-4 bg-ios-blue text-white font-bold rounded-lg shadow-md transition-transform transform hover:scale-105"
+                className="w-full ios-button-blue font-bold transition-transform transform hover:scale-105"
             >
                 Play Again
             </button>

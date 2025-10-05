@@ -109,7 +109,7 @@ const StudioScreen: React.FC = () => {
             
             {activeTab === 'track' && (
                 <div className="space-y-4">
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-4">
+                    <div className="ios-card p-4 space-y-4">
                         <h2 className="text-xl font-semibold">Record a New Track</h2>
                         <p className="text-sm text-ios-label-secondary">Costs 20 Energy ⚡</p>
                         <input type="text" id="trackTitle" value={trackTitle} onChange={(e) => setTrackTitle(e.target.value)} placeholder="e.g. 'City Lights'" className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700 focus:ring-2 focus:ring-ios-blue focus:outline-none"/>
@@ -124,15 +124,15 @@ const StudioScreen: React.FC = () => {
                         
                         {error && <p className="text-sm text-ios-red text-center">{error}</p>}
 
-                        <button onClick={handleCreateTrack} disabled={!trackTitle.trim() || player.stats.energy < 20 || (beatType === 'premium' && player.stats.netWorth < premiumBeatCost)} className={`w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray ${animateRecord ? 'animate-pulse' : ''}`}>Record Track</button>
+                        <button onClick={handleCreateTrack} disabled={!trackTitle.trim() || player.stats.energy < 20 || (beatType === 'premium' && player.stats.netWorth < premiumBeatCost)} className={`w-full text-lg ios-button-blue font-bold ${animateRecord ? 'animate-pulse' : ''}`}>Record Track</button>
                     </div>
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl">
+                    <div className="ios-card p-4">
                          <h2 className="text-xl font-semibold mb-2">My Vault (Unreleased Tracks)</h2>
                          <div className="max-h-60 overflow-y-auto space-y-2">
                             {unreleasedTracks.length > 0 ? unreleasedTracks.slice().reverse().map(track => (
                                 <div key={track.id} className="flex justify-between items-center bg-black p-3 rounded-md">
                                     <div><p className="font-semibold">{track.title}</p><p className="text-xs text-ios-label-secondary">Quality: {track.quality}</p></div>
-                                    <button onClick={() => handleReleaseTrack(track.id)} className="px-4 py-2 text-sm bg-ios-green text-black font-bold rounded-lg">Release Single</button>
+                                    <button onClick={() => handleReleaseTrack(track.id)} className="px-4 text-sm ios-button-green font-bold">Release Single</button>
                                 </div>
                             )) : <p className="text-ios-label-secondary">No unreleased tracks.</p>}
                          </div>
@@ -141,7 +141,7 @@ const StudioScreen: React.FC = () => {
             )}
             {activeTab === 'album' && (
                 <div className="space-y-4">
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-4">
+                    <div className="ios-card p-4 space-y-4">
                         <h2 className="text-xl font-semibold">Compile an Album</h2>
                         <p className="text-sm text-ios-label-secondary">Costs 70 Energy ⚡. Requires 3-10 tracks.</p>
                         <input type="text" value={albumTitle} onChange={e => setAlbumTitle(e.target.value)} placeholder="Album Title" className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700"/>
@@ -161,15 +161,15 @@ const StudioScreen: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 70 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || (releaseType === 'premium' && player.stats.netWorth < premiumAlbumCost)} className="w-full py-4 text-lg bg-ios-green text-black font-bold rounded-xl shadow-md disabled:bg-ios-gray">Create Album</button>
+                        <button onClick={handleCreateAlbum} disabled={!albumTitle.trim() || player.stats.energy < 70 || selectedTrackIds.length < 3 || selectedTrackIds.length > 10 || (releaseType === 'premium' && player.stats.netWorth < premiumAlbumCost)} className="w-full text-lg ios-button-green font-bold">Create Album</button>
                     </div>
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl">
+                    <div className="ios-card p-4">
                         <h2 className="text-xl font-semibold mb-2">My Vault (Unreleased Albums)</h2>
                         <div className="max-h-60 overflow-y-auto space-y-2">
                             {unreleasedAlbums.length > 0 ? unreleasedAlbums.slice().reverse().map(album => (
                                 <div key={album.id} className="flex justify-between items-center bg-black p-3 rounded-md">
                                     <p className="font-semibold">{album.title}</p>
-                                    <button onClick={() => handleReleaseAlbum(album.id)} className="px-4 py-2 text-sm bg-ios-green text-black font-bold rounded-lg">Release Album</button>
+                                    <button onClick={() => handleReleaseAlbum(album.id)} className="px-4 text-sm ios-button-green font-bold">Release Album</button>
                                 </div>
                             )) : <p className="text-ios-label-secondary">No unreleased albums.</p>}
                         </div>
@@ -178,7 +178,7 @@ const StudioScreen: React.FC = () => {
             )}
             {activeTab === 'mv' && (
                 <div className="space-y-4">
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-4">
+                    <div className="ios-card p-4 space-y-4">
                         <h2 className="text-xl font-semibold">Shoot a Music Video</h2>
                         <p className="text-sm text-ios-label-secondary">Costs 50 Energy ⚡.</p>
                         <select value={selectedTrackForMV} onChange={e => setSelectedTrackForMV(e.target.value)} className="w-full bg-black text-ios-label p-3 rounded-lg border border-gray-700">
@@ -193,15 +193,15 @@ const StudioScreen: React.FC = () => {
                                 </div>
                             ))}
                         </div>
-                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 50 || player.stats.netWorth < agencyOptions[selectedAgency].cost} className="w-full py-4 text-lg bg-ios-red text-white font-bold rounded-xl shadow-md disabled:bg-ios-gray">Shoot Video</button>
+                        <button onClick={handleCreateMV} disabled={!selectedTrackForMV || player.stats.energy < 50 || player.stats.netWorth < agencyOptions[selectedAgency].cost} className="w-full text-lg ios-button-red font-bold">Shoot Video</button>
                     </div>
-                    <div className="bg-ios-bg-secondary p-4 rounded-xl">
+                    <div className="ios-card p-4">
                         <h2 className="text-xl font-semibold mb-2">My Vault (Unreleased MVs)</h2>
                         <div className="max-h-60 overflow-y-auto space-y-2">
                             {unreleasedMVs.length > 0 ? unreleasedMVs.slice().reverse().map(mv => (
                                 <div key={mv.id} className="flex justify-between items-center bg-black p-3 rounded-md">
                                     <div><p className="font-semibold">{mv.trackTitle}</p><p className="text-xs text-ios-label-secondary">Quality: {mv.quality}</p></div>
-                                    <button onClick={() => handleReleaseMV(mv.id)} className="px-4 py-2 text-sm bg-ios-red text-white font-bold rounded-lg">Release MV</button>
+                                    <button onClick={() => handleReleaseMV(mv.id)} className="px-4 text-sm ios-button-red font-bold">Release MV</button>
                                 </div>
                             )) : <p className="text-ios-label-secondary">No unreleased music videos.</p>}
                         </div>

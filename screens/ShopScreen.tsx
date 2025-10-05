@@ -70,7 +70,7 @@ const ShopScreen: React.FC = () => {
                     const canAfford = player.stats.netWorth >= item.cost;
                     
                     return (
-                        <div key={item.id} className="bg-ios-bg-secondary p-4 rounded-xl">
+                        <div key={item.id} className="ios-card p-4">
                             <div className="flex justify-between items-start">
                                 <div className="flex-1 pr-4">
                                     <h2 className="text-lg font-semibold">{item.name}</h2>
@@ -80,7 +80,7 @@ const ShopScreen: React.FC = () => {
                                 <button
                                     onClick={() => handleBuyItem(item)}
                                     disabled={owned || !canAfford}
-                                    className="px-6 py-3 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors text-base"
+                                    className="px-6 ios-button-blue font-bold text-base"
                                 >
                                     {owned ? 'Owned' : 'Buy'}
                                 </button>

@@ -49,10 +49,10 @@ const SettingsScreen: React.FC = () => {
             <h1 className="text-3xl font-bold">Settings</h1>
             
             <div className="space-y-2">
-                <button onClick={() => setShowSavePrompt(true)} className="w-full text-lg py-3 bg-ios-blue text-white font-semibold rounded-xl">
+                <button onClick={() => setShowSavePrompt(true)} className="w-full text-lg ios-button-blue font-semibold">
                     Manual Save
                 </button>
-                 <button onClick={handleSaveAndQuit} className="w-full text-lg py-3 bg-ios-red text-white font-semibold rounded-xl">
+                 <button onClick={handleSaveAndQuit} className="w-full text-lg ios-button-red font-semibold">
                     Save & Quit to Menu
                 </button>
             </div>
@@ -62,24 +62,24 @@ const SettingsScreen: React.FC = () => {
                     <div className="bg-ios-bg-secondary rounded-xl p-4 space-y-4 w-full max-w-sm">
                         <h3 className="text-xl font-bold text-center">Select a Save Slot</h3>
                         <div className="flex flex-col space-y-3">
-                           <button onClick={() => handleSave('1')} className="w-full py-3 bg-ios-blue text-white font-semibold rounded-lg">Slot 1</button>
-                           <button onClick={() => handleSave('2')} className="w-full py-3 bg-ios-blue text-white font-semibold rounded-lg">Slot 2</button>
-                           <button onClick={() => handleSave('3')} className="w-full py-3 bg-ios-blue text-white font-semibold rounded-lg">Slot 3</button>
+                           <button onClick={() => handleSave('1')} className="w-full ios-button-blue font-semibold">Slot 1</button>
+                           <button onClick={() => handleSave('2')} className="w-full ios-button-blue font-semibold">Slot 2</button>
+                           <button onClick={() => handleSave('3')} className="w-full ios-button-blue font-semibold">Slot 3</button>
                         </div>
-                        <button onClick={() => setShowSavePrompt(false)} className="w-full py-3 bg-ios-gray text-white font-semibold rounded-lg mt-2">
+                        <button onClick={() => setShowSavePrompt(false)} className="w-full ios-button-gray font-semibold mt-2">
                             Cancel
                         </button>
                     </div>
                 </div>
             )}
             
-            <div className="bg-ios-bg-secondary rounded-xl divide-y divide-gray-700 px-4">
+            <div className="ios-card divide-y divide-gray-700 px-4">
                 <SettingRow label="Language" value="English" />
                 <SettingRow label="Sound" value="On" />
                 <SettingRow label="Graphics" value="High" />
             </div>
 
-            <div className="bg-ios-bg-secondary rounded-xl p-4">
+            <div className="ios-card p-4">
                 <h2 className="text-lg font-semibold text-ios-label mb-2 px-0">Credits</h2>
                 <div className="divide-y divide-gray-700">
                     <CreditRow label="Publisher" value="FHX STUDIOS" />
@@ -89,7 +89,7 @@ const SettingsScreen: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-ios-bg-secondary rounded-xl divide-y divide-gray-700 px-4">
+            <div className="ios-card divide-y divide-gray-700 px-4">
                 <h2 className="text-lg font-semibold text-ios-label pt-4">Support Us</h2>
                 <LinkRow href="https://x.com/Fhx_Studios" label="Twitter (X)" value="@Fhx_Studios" />
                 <LinkRow href="https://www.patreon.com/FhxStudios" label="Patreon" value="FHX Studios" />

@@ -155,21 +155,35 @@ export const SaveIcon = (props: IconProps) => (
     </svg>
 );
 export const RapGramIcon = (props: IconProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
-        <rect width="16" height="16" x="4" y="4" rx="4" />
-        <circle cx="12" cy="12" r="3" />
-        <path d="M17.5 6.5h.01" />
+    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <defs>
+            <radialGradient id="paint0_radial_1_2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(2.5 61.5) rotate(-45) scale(84.1456)">
+                <stop stopColor="#FEDA77"/>
+                <stop offset="0.3" stopColor="#F58529"/>
+                <stop offset="0.6" stopColor="#DD2A7B"/>
+                <stop offset="1" stopColor="#8134AF"/>
+            </radialGradient>
+        </defs>
+        <rect width="64" height="64" rx="14" fill="url(#paint0_radial_1_2)"/>
+        <rect x="7" y="7" width="50" height="50" rx="12" fill="white"/>
+        <rect x="11" y="11" width="42" height="42" rx="10" stroke="url(#paint0_radial_1_2)" strokeWidth="3"/>
+        <circle cx="32" cy="32" r="11" stroke="url(#paint0_radial_1_2)" strokeWidth="3"/>
+        <circle cx="45" cy="19" r="3" fill="url(#paint0_radial_1_2)"/>
     </svg>
 );
 export const RapifyIcon = (props: IconProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15m-10.5-9h15" />
+    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <rect width="64" height="64" rx="12" fill="#1DB954"/>
+        <circle cx="32" cy="32" r="20" fill="#191414"/>
+        <path d="M19.5 32C19.5 25.0964 25.0964 19.5 32 19.5C38.9036 19.5 44.5 25.0964 44.5 32C44.5 38.9036 38.9036 44.5 32 44.5C25.0964 44.5 19.5 38.9036 19.5 32Z" stroke="#1DB954" strokeWidth="4"/>
+        <path d="M24 27.5L40 27.5" stroke="#1DB954" strokeWidth="4" strokeLinecap="round"/>
+        <path d="M24 35.5L40 35.5" stroke="#1DB954" strokeWidth="4" strokeLinecap="round"/>
     </svg>
 );
 export const RapTubeIcon = (props: IconProps) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15.91 11.672a.375.375 0 010 .656l-5.603 3.113a.375.375 0 01-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112z" />
+    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <rect width="64" height="64" rx="12" fill="#FF0000"/>
+        <path d="M44 32.1603L26 42.3205L26 22L44 32.1603Z" fill="white"/>
     </svg>
 );
 export const ChevronRightIcon = (props: IconProps) => (

@@ -45,7 +45,7 @@ const JobScreen: React.FC = () => {
                         const isUnlocked = player.stats.fame >= concert.requiredFame;
 
                         return (
-                            <div key={concert.name} className={`bg-ios-bg-secondary p-4 rounded-xl ${!isUnlocked && 'opacity-50'}`}>
+                            <div key={concert.name} className={`ios-card p-4 ${!isUnlocked && 'opacity-50'}`}>
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h2 className="text-lg font-semibold">{concert.name}</h2>
@@ -64,7 +64,7 @@ const JobScreen: React.FC = () => {
                                     <button
                                         onClick={() => handlePerform(concert)}
                                         disabled={!canAfford || !isUnlocked}
-                                        className="px-6 py-3 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors text-base"
+                                        className="px-6 ios-button-blue font-bold text-base"
                                     >
                                         Perform
                                     </button>
@@ -86,7 +86,7 @@ const JobScreen: React.FC = () => {
                         const isUnlocked = player.stats.fame >= job.requiredFame;
 
                         return (
-                            <div key={job.name} className={`bg-ios-bg-secondary p-4 rounded-xl ${!isUnlocked && 'opacity-50'}`}>
+                            <div key={job.name} className={`ios-card p-4 ${!isUnlocked && 'opacity-50'}`}>
                                 <div className="flex justify-between items-center">
                                     <div>
                                         <h2 className="text-lg font-semibold">{job.name}</h2>
@@ -105,7 +105,7 @@ const JobScreen: React.FC = () => {
                                     <button
                                         onClick={() => handleWork(job)}
                                         disabled={!canAfford || !isUnlocked}
-                                        className="px-6 py-3 bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors text-base"
+                                        className="px-6 ios-button-blue font-bold text-base"
                                     >
                                         Work
                                     </button>

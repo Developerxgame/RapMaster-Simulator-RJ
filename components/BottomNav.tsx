@@ -9,10 +9,10 @@ const NavItem: React.FC<{ to: string; icon: React.ReactNode; activeIcon: React.R
   return (
     <NavLink
       to={to}
-      className={`flex flex-col items-center justify-center w-full transition-colors duration-200 ${isActive ? 'text-ios-blue' : 'text-ios-gray'}`}
+      className={`flex flex-col items-center justify-center w-full transition-colors duration-200 ${isActive ? 'text-ios-blue' : 'text-ios-label'}`}
     >
       {isActive ? activeIcon : icon}
-      <span className="text-xs mt-1 font-medium">{label}</span>
+      <span className={`text-xs mt-1 font-medium ${isActive ? 'text-ios-blue' : 'text-ios-gray'}`}>{label}</span>
     </NavLink>
   );
 };
@@ -30,10 +30,10 @@ const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-24 bg-ios-bg-secondary bg-opacity-80 backdrop-blur-md border-t border-gray-700 z-10">
-      <div className="flex justify-around items-start h-full pt-2">
-        {navItems.map(item => <NavItem key={item.to} {...item} />)}
-      </div>
+    <nav className="fixed bottom-4 left-0 right-0 max-w-md mx-auto h-24 px-4 z-10">
+        <div className="flex justify-around items-center h-full bg-ios-bg-secondary/70 backdrop-blur-lg rounded-3xl border border-white/10 shadow-lg">
+            {navItems.map(item => <NavItem key={item.to} {...item} />)}
+        </div>
     </nav>
   );
 };

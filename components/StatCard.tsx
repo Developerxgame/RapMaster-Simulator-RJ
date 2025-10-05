@@ -10,7 +10,7 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ icon, label, value, colorClass = 'text-ios-label' }) => {
   return (
-    <div className="bg-ios-bg-secondary p-4 rounded-xl flex items-center space-x-4">
+    <div className="ios-card p-4 flex items-center space-x-4">
       <div className="text-ios-blue">{icon}</div>
       <div>
         <p className="text-sm text-ios-label-secondary">{label}</p>

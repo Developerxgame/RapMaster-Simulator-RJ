@@ -25,7 +25,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-ios-bg-secondary p-4 rounded-xl flex items-center space-x-4">
+      <div className="ios-card p-4 flex items-center space-x-4">
         <img src={player.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full bg-ios-gray" />
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{player.stageName}</h1>
@@ -46,7 +46,7 @@ const HomeScreen: React.FC = () => {
         <StatCard icon={<CashIcon className="w-8 h-8"/>} label="Net Worth" value={`$${formatNumber(player.stats.netWorth)}`} colorClass="text-ios-green" />
       </div>
 
-      <div className="bg-ios-bg-secondary p-4 rounded-xl space-y-2">
+      <div className="ios-card p-4 space-y-2">
         <h2 className="text-lg font-semibold mb-2">News & Events</h2>
         <div className="h-24 overflow-y-auto text-sm text-ios-label-secondary font-mono">
           {log.slice().reverse().map((entry, index) => (
@@ -57,7 +57,7 @@ const HomeScreen: React.FC = () => {
       
       <button
         onClick={handleAdvanceWeek}
-        className="w-full py-4 text-lg bg-ios-blue text-white font-bold rounded-xl shadow-md transition-transform transform hover:scale-105"
+        className="w-full text-lg ios-button-blue font-bold transition-transform transform hover:scale-105"
       >
         Next Week
       </button>

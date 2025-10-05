@@ -63,13 +63,13 @@ const MainMenuScreen: React.FC = () => {
         <div className="relative w-full max-w-xs space-y-5">
              <button 
                 onClick={handleNewGame}
-                className="w-full px-12 py-5 bg-ios-blue text-white font-bold text-xl rounded-xl shadow-lg shadow-blue-500/50 transform hover:scale-105 transition-transform duration-300"
+                className="w-full text-xl ios-button-blue py-3 font-bold shadow-lg shadow-blue-500/50 transform hover:scale-105 transition-transform duration-300"
               >
                 New Game
             </button>
              <button 
                 onClick={handleLoadGame}
-                className="w-full px-12 py-5 bg-ios-bg-secondary text-white font-bold text-xl rounded-xl shadow-lg transform hover:scale-105 transition-transform duration-300"
+                className="w-full text-xl ios-button-gray py-3 font-bold shadow-lg transform hover:scale-105 transition-transform duration-300"
               >
                 Load Game
             </button>

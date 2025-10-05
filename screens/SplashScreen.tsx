@@ -22,7 +22,7 @@ const SplashScreen: React.FC = () => {
       
       <button 
         onClick={handlePlay}
-        className="mt-32 px-16 py-5 bg-ios-blue text-white font-bold text-xl rounded-full shadow-lg shadow-blue-500/50 transform hover:scale-105 transition-transform duration-300"
+        className="mt-32 ios-button-blue text-xl px-16 py-3 font-bold shadow-lg shadow-blue-500/50 transform hover:scale-105 transition-transform duration-300"
       >
         TAP TO START
       </button>

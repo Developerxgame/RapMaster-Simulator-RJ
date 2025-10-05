@@ -38,13 +38,13 @@ const SkillsScreen: React.FC = () => {
                     const energyCost = 20;
 
                     return (
-                        <div key={skillKey} className="bg-ios-bg-secondary p-4 rounded-xl">
+                        <div key={skillKey} className="ios-card p-4">
                             <div className="flex justify-between items-center mb-2">
                                 <h2 className="text-lg font-semibold">{skill.name} <span className="text-sm font-mono text-ios-blue">Lv. {level}</span></h2>
                                 <button
                                     onClick={() => handleTrain(skillKey)}
                                     disabled={player.stats.energy < energyCost || level >= 100}
-                                    className="px-5 py-2.5 text-sm bg-ios-blue text-white font-bold rounded-lg shadow-md disabled:bg-ios-gray disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-1.5"
+                                    className="px-5 text-sm ios-button-blue font-bold flex items-center justify-center space-x-1.5"
                                 >
                                     <span>Train</span>
                                     <span className="flex items-center">
