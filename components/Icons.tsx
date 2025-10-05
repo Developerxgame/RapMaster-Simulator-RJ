@@ -155,37 +155,73 @@ export const SaveIcon = (props: IconProps) => (
     </svg>
 );
 export const RapGramIcon = (props: IconProps) => (
-    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
         <defs>
-            <radialGradient id="paint0_radial_1_2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(2.5 61.5) rotate(-45) scale(84.1456)">
+            <radialGradient id="paint0_radial_rapgram" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(11.24 59.8) rotate(-58.12) scale(80.58)">
                 <stop stopColor="#FEDA77"/>
                 <stop offset="0.3" stopColor="#F58529"/>
                 <stop offset="0.6" stopColor="#DD2A7B"/>
                 <stop offset="1" stopColor="#8134AF"/>
             </radialGradient>
         </defs>
-        <rect width="64" height="64" rx="14" fill="url(#paint0_radial_1_2)"/>
-        <rect x="7" y="7" width="50" height="50" rx="12" fill="white"/>
-        <rect x="11" y="11" width="42" height="42" rx="10" stroke="url(#paint0_radial_1_2)" strokeWidth="3"/>
-        <circle cx="32" cy="32" r="11" stroke="url(#paint0_radial_1_2)" strokeWidth="3"/>
-        <circle cx="45" cy="19" r="3" fill="url(#paint0_radial_1_2)"/>
+        <rect width="64" height="64" rx="14" fill="url(#paint0_radial_rapgram)"/>
+        <rect x="7" y="7" width="50" height="50" rx="12" stroke="white" strokeOpacity="0.3" strokeWidth="2"/>
+        <rect x="14" y="14" width="36" height="36" rx="8" stroke="white" strokeWidth="3"/>
+        <circle cx="32" cy="32" r="9" stroke="white" strokeWidth="3"/>
+        <circle cx="45" cy="19" r="3" fill="white"/>
     </svg>
 );
+
 export const RapifyIcon = (props: IconProps) => (
-    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-        <rect width="64" height="64" rx="12" fill="#1DB954"/>
-        <circle cx="32" cy="32" r="20" fill="#191414"/>
-        <path d="M19.5 32C19.5 25.0964 25.0964 19.5 32 19.5C38.9036 19.5 44.5 25.0964 44.5 32C44.5 38.9036 38.9036 44.5 32 44.5C25.0964 44.5 19.5 38.9036 19.5 32Z" stroke="#1DB954" strokeWidth="4"/>
-        <path d="M24 27.5L40 27.5" stroke="#1DB954" strokeWidth="4" strokeLinecap="round"/>
-        <path d="M24 35.5L40 35.5" stroke="#1DB954" strokeWidth="4" strokeLinecap="round"/>
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <defs>
+            <linearGradient id="paint0_linear_rapify" x1="32" y1="0" x2="32" y2="64" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#1ED760"/>
+                <stop offset="1" stopColor="#1DB954"/>
+            </linearGradient>
+            <filter id="shadow_rapify" x="-2" y="-2" width="68" height="68" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+                <feOffset dy="2"/>
+                <feGaussianBlur stdDeviation="2"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+            </filter>
+        </defs>
+        <g filter="url(#shadow_rapify)">
+            <rect width="64" height="64" rx="32" fill="url(#paint0_linear_rapify)"/>
+        </g>
+        <circle cx="32" cy="32" r="20" fill="#191414" stroke="#121212" strokeWidth="2"/>
+        <path d="M23 30.5H41" stroke="white" strokeWidth="4" strokeLinecap="round"/>
+        <path d="M23 38.5H35" stroke="white" strokeWidth="4" strokeLinecap="round"/>
     </svg>
 );
+
 export const RapTubeIcon = (props: IconProps) => (
-    <svg width="24" height="24" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-        <rect width="64" height="64" rx="12" fill="#FF0000"/>
-        <path d="M44 32.1603L26 42.3205L26 22L44 32.1603Z" fill="white"/>
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <defs>
+            <linearGradient id="paint0_linear_raptube" x1="32" y1="0" x2="32" y2="64" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FF3B30"/>
+                <stop offset="1" stopColor="#FF0000"/>
+            </linearGradient>
+            <filter id="shadow_raptube" x="-2" y="-2" width="68" height="68" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
+                <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/>
+                <feOffset dy="2"/>
+                <feGaussianBlur stdDeviation="2"/>
+                <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+                <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow"/>
+                <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow" result="shape"/>
+            </filter>
+        </defs>
+        <g filter="url(#shadow_raptube)">
+            <rect x="4" y="10" width="56" height="44" rx="12" fill="url(#paint0_linear_raptube)"/>
+        </g>
+        <path d="M28 26L42 32L28 38V26Z" fill="white"/>
     </svg>
 );
+
 export const ChevronRightIcon = (props: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />

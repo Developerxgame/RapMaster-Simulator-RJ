@@ -55,7 +55,7 @@ const initialState: GameState = {
   gameStatus: GameStatus.SPLASH,
   player: {
     stageName: 'Rookie',
-    avatarUrl: 'https://api.dicebear.com/8.x/avataaars-neutral/svg?seed=rapper1',
+    avatarUrl: 'https://api.dicebear.com/8.x/adventurer/svg?seed=Rookie',
     stats: {
       fame: 0,
       reputation: 0,
@@ -77,6 +77,9 @@ const initialState: GameState = {
     },
     socialMedia: {
         rapGramUsername: null,
+        rapGramFollowers: 0,
+        rapifyFollowers: 0,
+        rapTubeFollowers: 0,
     },
     careerLevel: 1,
     careerXp: 0,
@@ -336,18 +339,26 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const trackToRelease = state.discography.tracks.find(t => t.id === action.payload.trackId);
         if (!trackToRelease) return state;
 
+        const followerGain = Math.floor(trackToRelease.quality * 100 * (1 + state.player.skills.marketing / 50));
         const stateWithXp = addXp(state, XP_GAINS.TRACK_RELEASE);
 
         return {
             ...stateWithXp,
             weeksSinceLastRelease: 0,
+            player: {
+                ...stateWithXp.player,
+                socialMedia: {
+                    ...stateWithXp.player.socialMedia,
+                    rapifyFollowers: stateWithXp.player.socialMedia.rapifyFollowers + followerGain
+                }
+            },
             discography: {
                 ...stateWithXp.discography,
                 tracks: stateWithXp.discography.tracks.map(t => t.id === action.payload.trackId ? {
                     ...t, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
                 } : t)
             },
-            log: [...stateWithXp.log, `Released the single "${trackToRelease.title}".`]
+            log: [...stateWithXp.log, `Released the single "${trackToRelease.title}", gaining ${followerGain} Rapify followers.`]
         }
     }
 
@@ -390,12 +401,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const fameBoost = 10;
         const repBoost = 2;
+        const followerGain = Math.floor((fameBoost + repBoost) * 500 * (1 + state.player.skills.marketing / 40));
 
         return {
             ...state,
             weeksSinceLastRelease: 0,
              player: {
                 ...state.player,
+                socialMedia: {
+                    ...state.player.socialMedia,
+                    rapifyFollowers: state.player.socialMedia.rapifyFollowers + followerGain,
+                },
                 stats: { 
                     ...state.player.stats, 
                     fame: Math.min(MAX_FAME, state.player.stats.fame + fameBoost),
@@ -409,7 +425,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                     ...t, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year
                 } : t),
             },
-            log: [...state.log, `Released album "${albumToRelease.title}", gaining some buzz.`]
+            log: [...state.log, `Released album "${albumToRelease.title}", gaining some buzz and ${followerGain} Rapify followers.`]
         }
     }
 
@@ -458,12 +474,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         if (!mvToRelease) return state;
 
         const fameGain = mvToRelease.agency === 'premium' ? Math.floor(Math.random() * 5) + 5 : 0; // big initial boost for premium
+        const followerGain = Math.floor(mvToRelease.quality * 200 * (1 + state.player.skills.marketing / 30));
 
         return {
             ...state,
             weeksSinceLastRelease: 0,
             player: {
                 ...state.player,
+                socialMedia: {
+                    ...state.player.socialMedia,
+                    rapTubeFollowers: state.player.socialMedia.rapTubeFollowers + followerGain,
+                },
                 stats: {
                     ...state.player.stats,
                     fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain),
@@ -473,14 +494,14 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 ...state.discography,
                 musicVideos: state.discography.musicVideos.map(mv => mv.id === action.payload.mvId ? {...mv, isReleased: true, releaseWeek: state.gameDate.week, releaseYear: state.gameDate.year} : mv)
             },
-            log: [...state.log, `Released music video for "${mvToRelease.trackTitle}". ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
+            log: [...state.log, `Released music video for "${mvToRelease.trackTitle}", gaining ${followerGain} RapTube subscribers. ${fameGain > 0 ? 'The premium video went viral!' : ''}`]
         };
     }
     
     case ActionType.CREATE_SOCIAL_PROFILE: {
         return {
             ...state,
-            player: {...state.player, socialMedia: { rapGramUsername: action.payload.username }},
+            player: {...state.player, socialMedia: { ...state.player.socialMedia, rapGramUsername: action.payload.username }},
             log: [...state.log, `Created RapGram profile: @${action.payload.username}`],
         }
     }
@@ -495,6 +516,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const now = Date.now();
 
         const fameGain = Math.floor(1 * (1 + state.player.skills.marketing / 20));
+        const followerGain = Math.floor(fameGain * 100 * (1 + state.player.skills.marketing / 50));
 
         const newPost: RapGramPost = {
             id: `post-${now}`,
@@ -518,6 +540,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             ...stateWithXp,
             player: {
                 ...stateWithXp.player,
+                socialMedia: {
+                    ...stateWithXp.player.socialMedia,
+                    rapGramFollowers: stateWithXp.player.socialMedia.rapGramFollowers + followerGain
+                },
                 stats: {
                     ...stateWithXp.player.stats,
                     energy: stateWithXp.player.stats.energy - energyCost,
@@ -525,7 +551,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 }
             },
             socialFeed: [newPost, ...stateWithXp.socialFeed],
-            log: [...stateWithXp.log, `Posted on RapGram, gained ${fameGain} fame.`]
+            log: [...stateWithXp.log, `Posted on RapGram, gained ${fameGain} fame and ${followerGain} followers.`]
         }
     }
     
@@ -587,14 +613,27 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         } else if (type === 'mv') {
             updatedDiscography.musicVideos = state.discography.musicVideos.map(mv => mv.id === releaseId ? (releaseName = mv.trackTitle, updatePromotion(mv)) : mv);
         }
+
+        let updatedSocialMedia = { ...state.player.socialMedia };
+        let followerGain = Math.floor(PROMOTION_MULTIPLIERS[tier] * 1000 * state.player.careerLevel);
+
+        if (type === 'track' || type === 'album') {
+            updatedSocialMedia.rapifyFollowers += followerGain;
+        } else if (type === 'mv') {
+            updatedSocialMedia.rapTubeFollowers += followerGain;
+        }
         
         const stateWithXp = addXp(state, XP_GAINS.PROMOTION);
 
         return {
             ...stateWithXp,
-            player: { ...stateWithXp.player, stats: { ...stateWithXp.player.stats, netWorth: stateWithXp.player.stats.netWorth - cost } },
+            player: { 
+                ...stateWithXp.player,
+                socialMedia: updatedSocialMedia,
+                stats: { ...stateWithXp.player.stats, netWorth: stateWithXp.player.stats.netWorth - cost } 
+            },
             discography: updatedDiscography,
-            log: [...stateWithXp.log, `Started a 4-week ${tier} promotion for "${releaseName}" for $${cost}.`]
+            log: [...stateWithXp.log, `Started a 4-week ${tier} promotion for "${releaseName}" for $${cost}, gaining ${followerGain} followers.`]
         }
     }
 

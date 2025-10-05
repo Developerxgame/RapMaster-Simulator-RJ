@@ -134,7 +134,7 @@ const RapGramTab = () => {
                     <img src={player.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full bg-gray-700"/>
                     <div className="flex-grow flex justify-around text-center">
                         <div><p className="font-bold text-lg">{socialFeed.length}</p><p className="text-sm text-gray-400">Posts</p></div>
-                        <div><p className="font-bold text-lg">{player.stats.fans.toLocaleString()}</p><p className="text-sm text-gray-400">Fans</p></div>
+                        <div><p className="font-bold text-lg">{player.socialMedia.rapGramFollowers.toLocaleString()}</p><p className="text-sm text-gray-400">Followers</p></div>
                     </div>
                 </div>
                 <div className="px-4 pb-4">
@@ -161,7 +161,10 @@ const RapifyTab: React.FC<{onPromote: (info: any) => void}> = ({ onPromote }) =>
 
     return (
         <div className="bg-[#121212] text-white h-full flex flex-col">
-            <header className="p-4"><h1 className="text-2xl font-bold">Your Library</h1></header>
+            <header className="p-4">
+                <h1 className="text-2xl font-bold">Your Library</h1>
+                <p className="text-lg text-green-400 font-semibold">{player.socialMedia.rapifyFollowers.toLocaleString()} Followers</p>
+            </header>
             <main className="flex-grow overflow-y-auto px-4 space-y-6 pb-4">
                 <div>
                     <h2 className="text-xl font-semibold mb-3 flex items-center space-x-2"><CollectionIcon className="w-6 h-6" /><span>Albums</span></h2>
@@ -220,7 +223,10 @@ const RapTubeTab: React.FC<{onPromote: (info: any) => void}> = ({ onPromote }) =
 
     return (
         <div className="bg-[#0F0F0F] text-white h-full flex flex-col">
-            <header className="p-4"><h1 className="text-2xl font-bold">Your Videos</h1></header>
+            <header className="p-4">
+                <h1 className="text-2xl font-bold">Your Videos</h1>
+                <p className="text-lg text-red-500 font-semibold">{player.socialMedia.rapTubeFollowers.toLocaleString()} Subscribers</p>
+            </header>
             <main className="flex-grow overflow-y-auto">
                 {releasedMVs.length > 0 ? (
                     <div className="space-y-4">

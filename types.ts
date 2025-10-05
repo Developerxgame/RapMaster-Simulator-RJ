@@ -83,6 +83,9 @@ export interface Player {
   };
   socialMedia: {
     rapGramUsername: string | null;
+    rapGramFollowers: number;
+    rapifyFollowers: number;
+    rapTubeFollowers: number;
   };
   careerLevel: number;
   careerXp: number;
