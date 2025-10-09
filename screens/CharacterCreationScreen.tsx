@@ -21,7 +21,7 @@ const CharacterCreationScreen: React.FC = () => {
   );
 
   const avatarUrl = useMemo(() => {
-    return `https://api.dicebear.com/8.x/adventurer/svg?seed=${avatarSeeds[selectedAvatarIndex]}`;
+    return `https://api.dicebear.com/8.x/micah/svg?seed=${avatarSeeds[selectedAvatarIndex]}`;
   }, [selectedAvatarIndex]);
   
   const handleAvatarChange = (direction: 1 | -1) => {

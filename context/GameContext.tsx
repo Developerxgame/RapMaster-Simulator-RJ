@@ -55,7 +55,7 @@ const initialState: GameState = {
   gameStatus: GameStatus.SPLASH,
   player: {
     stageName: 'Rookie',
-    avatarUrl: 'https://api.dicebear.com/8.x/adventurer/svg?seed=Rookie',
+    avatarUrl: 'https://api.dicebear.com/8.x/micah/svg?seed=Rookie',
     stats: {
       fame: 0,
       reputation: 0,
@@ -526,7 +526,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             comments: Array.from({ length: Math.floor(Math.random() * 3) + 3 }).map(() => ({
                 username: usernames[Math.floor(Math.random() * usernames.length)],
                 text: commentTemplates[Math.floor(Math.random() * commentTemplates.length)],
-                avatarUrl: `https://api.dicebear.com/8.x/adventurer/svg?seed=${Math.random()}`,
+                avatarUrl: `https://api.dicebear.com/8.x/micah/svg?seed=${Math.random()}`,
                 createdAt: now - Math.floor(Math.random() * 60000)
             })),
             isLiked: false,
