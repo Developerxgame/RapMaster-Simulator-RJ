@@ -41,13 +41,27 @@ const promotions = {
 
 const SocialScreen: React.FC = () => {
     const { state } = useGame();
-    const [activeApp, setActiveApp] = useState<SocialApp>('homescreen');
+    const [history, setHistory] = useState<SocialApp[]>(['homescreen']);
     const [promoModal, setPromoModal] = useState<{release: Track | Album | MusicVideo, type: 'track' | 'album' | 'mv'} | null>(null);
+
+    const activeApp = history[history.length - 1];
 
     if (!state.player.socialMedia.rapGramUsername) {
         return <CreateProfile />;
     }
     
+    const handleOpenApp = (app: SocialApp) => {
+        setHistory(prev => [...prev, app]);
+    };
+
+    const handleGoBack = () => {
+        setHistory(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
+    };
+
+    const handleGoHome = () => {
+        setHistory(['homescreen']);
+    };
+
     const renderAppContent = () => {
         switch (activeApp) {
             case 'rapgram': return <RapGramTab />;
@@ -55,13 +69,17 @@ const SocialScreen: React.FC = () => {
             case 'raptube': return <RapTubeTab onPromote={setPromoModal} />;
             case 'homescreen':
             default:
-                return <HomeScreen onOpenApp={setActiveApp} />;
+                return <HomeScreen onOpenApp={handleOpenApp} />;
         }
     };
 
     return (
         <div className="flex justify-center items-center h-full">
-            <MobileMockup currentApp={activeApp} onGoHome={() => setActiveApp('homescreen')}>
+            <MobileMockup
+                currentApp={activeApp}
+                onGoHome={handleGoHome}
+                onGoBack={handleGoBack}
+            >
                 {renderAppContent()}
             </MobileMockup>
             {promoModal && <PromotionModal releaseInfo={promoModal} onClose={() => setPromoModal(null)} />}
