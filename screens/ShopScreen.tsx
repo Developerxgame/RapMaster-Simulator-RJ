@@ -4,11 +4,12 @@ import { ShopItem, ItemCategory, ActionType } from '../types';
 
 export const shopItems: ShopItem[] = [
     // Lifestyle
-    { id: 'ls1', name: 'Designer Sneakers', category: ItemCategory.LIFESTYLE, cost: 2000, description: "Look fresh. +5 Reputation.", repBonus: 5 },
-    { id: 'ls2', name: 'Gold Chain', category: ItemCategory.LIFESTYLE, cost: 10000, description: "A classic rapper accessory. +2 weekly fame.", repBonus: 10, fameBonus: 2 },
-    { id: 'ls3', name: 'Luxury Watch', category: ItemCategory.LIFESTYLE, cost: 50000, description: "Flex on 'em. +5 weekly fame.", repBonus: 25, fameBonus: 5 },
-    { id: 'ls4', name: 'Sports Car', category: ItemCategory.LIFESTYLE, cost: 250000, description: "Ride in style. +20 weekly fame.", repBonus: 100, fameBonus: 20 },
-    { id: 'ls5', name: 'Penthouse Apartment', category: ItemCategory.LIFESTYLE, cost: 1000000, description: "The view from the top. +50 weekly fame.", repBonus: 250, fameBonus: 50 },
+    { id: 'ls1', name: 'Designer Sneakers', category: ItemCategory.LIFESTYLE, cost: 2000, description: "Look fresh. +5 Reputation.", repBonus: 5, maintenanceCost: 50 },
+    { id: 'ls2', name: 'Gold Chain', category: ItemCategory.LIFESTYLE, cost: 10000, description: "A classic rapper accessory. +2 weekly fame.", repBonus: 10, fameBonus: 2, maintenanceCost: 100 },
+    { id: 'ls_bike', name: 'Motorcycle', category: ItemCategory.LIFESTYLE, cost: 25000, description: "Quick way to get around the city. +3 weekly fame.", repBonus: 15, fameBonus: 3, maintenanceCost: 250 },
+    { id: 'ls3', name: 'Luxury Watch', category: ItemCategory.LIFESTYLE, cost: 50000, description: "Flex on 'em. +5 weekly fame.", repBonus: 25, fameBonus: 5, maintenanceCost: 500 },
+    { id: 'ls4', name: 'Sports Car', category: ItemCategory.LIFESTYLE, cost: 250000, description: "Ride in style. +20 weekly fame.", repBonus: 100, fameBonus: 20, maintenanceCost: 1000 },
+    { id: 'ls5', name: 'Penthouse Apartment', category: ItemCategory.LIFESTYLE, cost: 1000000, description: "The view from the top. +50 weekly fame.", repBonus: 250, fameBonus: 50, maintenanceCost: 5000 },
     
     // Studio Equipment - Mic
     { id: 'se_mic1', name: 'Basic USB Mic', category: ItemCategory.STUDIO, cost: 500, description: "A solid start. +2 track quality.", equipmentType: 'mic', qualityBonus: 2 },
@@ -75,7 +76,12 @@ const ShopScreen: React.FC = () => {
                                 <div className="flex-1 pr-4">
                                     <h2 className="text-lg font-semibold">{item.name}</h2>
                                     <p className="text-sm text-ios-label-secondary mt-1">{item.description}</p>
-                                    <p className="text-base font-bold text-ios-green mt-2">${item.cost.toLocaleString()}</p>
+                                    <div className="flex items-center space-x-4 mt-2">
+                                        <p className="text-base font-bold text-ios-green">${item.cost.toLocaleString()}</p>
+                                        {item.maintenanceCost && (
+                                            <p className="text-sm font-semibold text-ios-red">-${item.maintenanceCost.toLocaleString()}/week</p>
+                                        )}
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => handleBuyItem(item)}

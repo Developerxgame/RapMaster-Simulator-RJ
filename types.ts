@@ -128,6 +128,8 @@ export interface GameState {
   };
   socialFeed: RapGramPost[];
   weeksSinceLastRelease: number;
+  weeklyIncome?: number;
+  weeklyExpenses?: number;
 }
 
 export interface SaveSlot {
@@ -152,6 +154,7 @@ export interface ShopItem {
     // For LIFESTYLE items
     fameBonus?: number;
     repBonus?: number;
+    maintenanceCost?: number;
     // For STUDIO items
     equipmentType?: keyof Player['studioEquipment'];
     qualityBonus?: number;

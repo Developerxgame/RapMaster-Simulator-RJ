@@ -6,6 +6,9 @@ const SplashScreen: React.FC = () => {
   const { dispatch } = useGame();
 
   const handlePlay = () => {
+    if (window.navigator.vibrate) {
+        window.navigator.vibrate(100);
+    }
     dispatch({ type: ActionType.SET_STATUS, payload: GameStatus.MAIN_MENU });
   };
   

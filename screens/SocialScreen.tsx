@@ -145,7 +145,7 @@ const RapGramTab = () => {
         <div className="bg-black text-white h-full flex flex-col">
             <header className="flex-shrink-0 flex items-center justify-between p-3 border-b border-gray-700">
                 <h1 className="font-serif text-xl font-bold">RapGram</h1>
-                <button onClick={handlePost} disabled={player.stats.energy < energyCostForPost} className="text-ios-blue font-semibold text-lg disabled:opacity-50">+</button>
+                <button onClick={handlePost} aria-label="Create new post" disabled={player.stats.energy < energyCostForPost} className="text-ios-blue font-semibold text-lg disabled:opacity-50">+</button>
             </header>
             <main className="flex-grow overflow-y-auto">
                 <div className="flex items-center space-x-4 p-4">

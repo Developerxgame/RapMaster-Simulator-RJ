@@ -97,6 +97,21 @@ const initialState: GameState = {
   history: {},
   socialFeed: [],
   weeksSinceLastRelease: 0,
+  weeklyIncome: 0,
+  weeklyExpenses: 0,
+};
+
+const triggerHapticFeedback = (style: 'light' | 'medium' | 'heavy' | 'success' | 'error' = 'light') => {
+    if (window.navigator.vibrate) {
+      const pattern = {
+        light: [50],
+        medium: [100],
+        heavy: [200],
+        success: [100, 50, 100],
+        error: [50, 100, 50],
+      }[style];
+      window.navigator.vibrate(pattern);
+    }
 };
 
 const addXp = (state: GameState, amount: number): GameState => {
@@ -109,6 +124,7 @@ const addXp = (state: GameState, amount: number): GameState => {
     if (currentLevel < LEVEL_MULTIPLIERS.length && newXp >= nextLevelThreshold) {
         newLevel = currentLevel + 1;
         newLog = [...newLog, `LEVEL UP! Reached Career Level ${newLevel}!`];
+        triggerHapticFeedback('success');
     }
     
     return {
@@ -144,10 +160,12 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     }
     
     let passiveFameBonus = 0;
+    let totalMaintenanceCost = 0;
     state.player.ownedItemIds.forEach(itemId => {
         const item = shopItems.find(i => i.id === itemId);
         if(item && item.category === ItemCategory.LIFESTYLE){
             passiveFameBonus += item.fameBonus || 0;
+            totalMaintenanceCost += item.maintenanceCost || 0;
         }
     });
     
@@ -197,14 +215,20 @@ const processWeeklyUpdate = (state: GameState): GameState => {
     const newFame = Math.min(MAX_FAME, Math.max(0, state.player.stats.fame + fameGrowth - fameDecay));
     const newRep = Math.min(MAX_REPUTATION, Math.max(0, state.player.stats.reputation + repGrowth - repDecay));
     const newFans = Math.floor(newFame * 50 * (1 + state.player.skills.marketing / 100)); // Rebalanced fan calculation
+    
+    const newNetWorth = state.player.stats.netWorth + totalIncome - totalMaintenanceCost;
 
     const newHistory = {...state.history};
     if(week === 52) {
-        newHistory[year] = { fame: newFame, fans: newFans, netWorth: state.player.stats.netWorth + totalIncome };
+        newHistory[year] = { fame: newFame, fans: newFans, netWorth: newNetWorth };
     }
 
-    let weeklyLog = [`Earned $${totalIncome.toFixed(2)} from music this week.`];
+    let weeklyLog = [
+        `Earned $${totalIncome.toFixed(2)} from music this week.`,
+        `Paid $${totalMaintenanceCost.toFixed(2)} in lifestyle maintenance costs.`
+    ];
     if (decayLog) weeklyLog.push(decayLog);
+    triggerHapticFeedback('light');
 
     const newState = {
         ...state,
@@ -214,7 +238,7 @@ const processWeeklyUpdate = (state: GameState): GameState => {
             stats: {
                 ...state.player.stats,
                 energy: MAX_ENERGY,
-                netWorth: state.player.stats.netWorth + totalIncome,
+                netWorth: newNetWorth,
                 fame: newFame,
                 fans: newFans,
                 reputation: newRep,
@@ -224,6 +248,8 @@ const processWeeklyUpdate = (state: GameState): GameState => {
         log: [...state.log.slice(-10), ...weeklyLog],
         history: newHistory,
         weeksSinceLastRelease: newWeeksSinceLastRelease,
+        weeklyIncome: totalIncome,
+        weeklyExpenses: totalMaintenanceCost,
     };
     
     try {
@@ -246,6 +272,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         return { ...state, gameStatus: action.payload };
 
     case ActionType.START_GAME:
+        triggerHapticFeedback('success');
         return {
             ...initialState,
             gameStatus: GameStatus.PLAYING,
@@ -259,7 +286,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     
     case ActionType.WORK_JOB: {
         const { money, energyCost, fameGain } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        if (state.player.stats.energy < energyCost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
+        triggerHapticFeedback('medium');
         return {
             ...state,
             player: {
@@ -277,7 +308,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     
     case ActionType.PERFORM_CONCERT: {
         const { money, energyCost, fameGain } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        if (state.player.stats.energy < energyCost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
+        triggerHapticFeedback('heavy');
         return {
             ...state,
             player: {
@@ -295,7 +330,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case ActionType.CREATE_TRACK: {
         const { title, energyCost, beatType, cost } = action.payload;
-        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
         
         const micBonus = state.player.studioEquipment.mic;
         const audioBonus = state.player.studioEquipment.audio;
@@ -319,7 +357,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             revenue: 0,
             promotion: { isActive: false, weeksLeft: 0, tier: null },
         };
-
+        triggerHapticFeedback('medium');
         return {
             ...state,
             player: {
@@ -341,6 +379,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const followerGain = Math.floor(trackToRelease.quality * 100 * (1 + state.player.skills.marketing / 50));
         const stateWithXp = addXp(state, XP_GAINS.TRACK_RELEASE);
+        triggerHapticFeedback('success');
 
         return {
             ...stateWithXp,
@@ -364,7 +403,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case ActionType.CREATE_ALBUM: {
         const { title, trackIds, energyCost, releaseType, cost } = action.payload;
-        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
 
         const newAlbum: Album = {
             id: `album-${Date.now()}`, title, trackIds, sales: 0,
@@ -373,7 +415,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
         
         const stateWithXp = addXp(state, XP_GAINS.ALBUM_RELEASE);
-
+        triggerHapticFeedback('medium');
         return {
             ...stateWithXp,
             player: {
@@ -402,7 +444,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const fameBoost = 10;
         const repBoost = 2;
         const followerGain = Math.floor((fameBoost + repBoost) * 500 * (1 + state.player.skills.marketing / 40));
-
+        triggerHapticFeedback('success');
         return {
             ...state,
             weeksSinceLastRelease: 0,
@@ -431,7 +473,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case ActionType.CREATE_MV: {
         const { trackId, trackTitle, energyCost, agency, cost } = action.payload;
-        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) return state;
+        if (state.player.stats.energy < energyCost || state.player.stats.netWorth < cost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
         
         const agencyMultipliers = { low: 0.8, mid: 1.0, high: 1.3, premium: 1.8 };
         const agencyMultiplier = agencyMultipliers[agency];
@@ -453,7 +498,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
 
         const stateWithXp = addXp(state, XP_GAINS.MV_RELEASE);
-
+        triggerHapticFeedback('medium');
         return {
             ...stateWithXp,
              player: {
@@ -475,7 +520,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
         const fameGain = mvToRelease.agency === 'premium' ? Math.floor(Math.random() * 5) + 5 : 0; // big initial boost for premium
         const followerGain = Math.floor(mvToRelease.quality * 200 * (1 + state.player.skills.marketing / 30));
-
+        triggerHapticFeedback('success');
         return {
             ...state,
             weeksSinceLastRelease: 0,
@@ -508,7 +553,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case ActionType.CREATE_RAPGRAM_POST: {
         const { energyCost } = action.payload;
-        if (state.player.stats.energy < energyCost) return state;
+        if (state.player.stats.energy < energyCost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
         
         const postTemplates = ["Studio vibes today 🔥", "New music on the way!", "Shoutout to the fans 🙏", "Grinding.", "Cookin' up something special."];
         const commentTemplates = ["Dope!", "Fire!", "Let's gooo!", "Can't wait!", "Keep it up!", "King 👑"];
@@ -535,7 +583,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         };
 
         const stateWithXp = addXp(state, XP_GAINS.SOCIAL_POST);
-
+        triggerHapticFeedback('light');
         return {
             ...stateWithXp,
             player: {
@@ -564,7 +612,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const fameGain = Math.random() < 0.25 ? 1 : 0;
         let logMessage = `Liked a post.`;
         if(fameGain > 0) logMessage += ` Gained ${fameGain} fame!`;
-
+        triggerHapticFeedback('light');
         return {
             ...state,
             player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, fame: Math.min(MAX_FAME, state.player.stats.fame + fameGain)}},
@@ -589,7 +637,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             avatarUrl: state.player.avatarUrl,
             createdAt: Date.now(),
         };
-
+        triggerHapticFeedback('light');
         return {
             ...state,
             player: {...state.player, stats: {...state.player.stats, energy: state.player.stats.energy - energyCost, reputation: Math.min(MAX_REPUTATION, state.player.stats.reputation + repGain)}},
@@ -600,7 +648,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
 
     case ActionType.PROMOTE_RELEASE: {
         const { releaseId, type, tier, cost } = action.payload;
-        if (state.player.stats.netWorth < cost) return state;
+        if (state.player.stats.netWorth < cost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
         
         const updatePromotion = (item: any) => ({ ...item, promotion: { isActive: true, weeksLeft: 4, tier } });
 
@@ -624,7 +675,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         }
         
         const stateWithXp = addXp(state, XP_GAINS.PROMOTION);
-
+        triggerHapticFeedback('medium');
         return {
             ...stateWithXp,
             player: { 
@@ -645,9 +696,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         const { skill, energyCost } = action.payload;
         const player = state.player;
         if (player.stats.energy < energyCost || player.skills[skill] >= 100) {
+            triggerHapticFeedback('error');
             return state;
         }
-        
+        triggerHapticFeedback('light');
         return {
             ...state,
             player: {
@@ -662,7 +714,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     case ActionType.BUY_ITEM: {
         const { item } = action.payload;
         const player = state.player;
-        if(player.stats.netWorth < item.cost) return state;
+        if(player.stats.netWorth < item.cost) {
+            triggerHapticFeedback('error');
+            return state;
+        }
 
         const newStats = {...player.stats, netWorth: player.stats.netWorth - item.cost};
         let newOwnedItemIds = player.ownedItemIds;
@@ -685,6 +740,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
             logMessage += ` Studio quality improved.`
         }
 
+        triggerHapticFeedback('medium');
         return {
             ...state,
             player: {
@@ -707,14 +763,17 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
                 year: state.gameDate.year, netWorth: state.player.stats.netWorth,
             };
             localStorage.setItem(`saveSlot_${slotId}_meta`, JSON.stringify(meta));
+            triggerHapticFeedback('success');
             return { ...state, log: [...state.log, `Game saved to slot ${slotId}.`] };
         } catch (e) {
             console.error("Failed to save game", e);
+            triggerHapticFeedback('error');
             return { ...state, log: [...state.log, `Error: Could not save game.`] };
         }
     }
 
     case ActionType.LOAD_GAME: {
+        triggerHapticFeedback('success');
         return { ...action.payload.state, log: [...action.payload.state.log.slice(-10), 'Game loaded successfully.'] };
     }
 
@@ -722,9 +781,11 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
         try {
             localStorage.removeItem(`saveSlot_${action.payload.slotId}`);
             localStorage.removeItem(`saveSlot_${action.payload.slotId}_meta`);
+            triggerHapticFeedback('medium');
             return { ...state, log: [...state.log, `Deleted save slot ${action.payload.slotId}.`] };
         } catch (e) {
             console.error("Failed to delete save", e);
+            triggerHapticFeedback('error');
         }
         return state;
     }

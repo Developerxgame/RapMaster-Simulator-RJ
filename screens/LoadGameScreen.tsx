@@ -75,10 +75,10 @@ const LoadGameScreen: React.FC = () => {
                             </div>
                         </div>
                          <div className="flex items-center">
-                            <button onClick={() => setConfirmingDelete(slot.slotId)} className="p-2 text-ios-red hover:bg-red-500/20 rounded-full">
+                            <button onClick={() => setConfirmingDelete(slot.slotId)} aria-label={`Delete save for ${slot.stageName}`} className="p-2 text-ios-red hover:bg-red-500/20 rounded-full">
                                 <TrashIcon className="w-6 h-6"/>
                             </button>
-                             <button onClick={() => handleLoad(slot.slotId)} className="p-2 text-ios-label-secondary">
+                             <button onClick={() => handleLoad(slot.slotId)} aria-label={`Load game for ${slot.stageName}`} className="p-2 text-ios-label-secondary">
                                 <ChevronRightIcon className="w-7 h-7"/>
                             </button>
                         </div>

@@ -52,7 +52,7 @@ const CharacterCreationScreen: React.FC = () => {
       
       <div className="flex flex-col items-center space-y-4 flex-shrink-0">
         <div className="flex items-center justify-center space-x-2">
-            <button onClick={() => handleAvatarChange(-1)} className="p-2 text-ios-label-secondary hover:text-ios-blue transition-colors rounded-full hover:bg-ios-bg-secondary"><ChevronLeftIcon /></button>
+            <button onClick={() => handleAvatarChange(-1)} aria-label="Previous avatar" className="p-2 text-ios-label-secondary hover:text-ios-blue transition-colors rounded-full hover:bg-ios-bg-secondary"><ChevronLeftIcon /></button>
             <div className="w-40 h-40 rounded-full border-4 border-ios-blue bg-ios-bg-secondary flex items-center justify-center overflow-hidden">
                 <img 
                   src={avatarUrl} 
@@ -60,7 +60,7 @@ const CharacterCreationScreen: React.FC = () => {
                   className="w-full h-full object-cover"
                 />
             </div>
-            <button onClick={() => handleAvatarChange(1)} className="p-2 text-ios-label-secondary hover:text-ios-blue transition-colors rounded-full hover:bg-ios-bg-secondary"><ChevronRightIcon /></button>
+            <button onClick={() => handleAvatarChange(1)} aria-label="Next avatar" className="p-2 text-ios-label-secondary hover:text-ios-blue transition-colors rounded-full hover:bg-ios-bg-secondary"><ChevronRightIcon /></button>
         </div>
         <p className="font-semibold text-ios-label-secondary">{`Style ${selectedAvatarIndex + 1} of ${avatarSeeds.length}`}</p>
       </div>

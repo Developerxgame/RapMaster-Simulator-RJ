@@ -4,24 +4,29 @@ import { ActionType } from '../types';
 import StatCard from '../components/StatCard';
 import ProgressBar from '../components/ProgressBar';
 import { XP_THRESHOLDS } from '../context/GameContext';
-import { StarIcon, UserGroupIcon, ShieldCheckIcon, CashIcon } from '../components/Icons';
+import { StarIcon, UserGroupIcon, ShieldCheckIcon, CashIcon, GlobeIcon } from '../components/Icons';
 
 const HomeScreen: React.FC = () => {
   const { state, dispatch } = useGame();
-  const { player, log } = state;
+  const { player, log, weeklyIncome, weeklyExpenses } = state;
 
   const handleAdvanceWeek = () => {
     dispatch({ type: ActionType.ADVANCE_WEEK });
   };
   
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat().format(Math.floor(num));
+    if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1) + 'B';
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
+    if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K';
+    return num.toLocaleString();
   };
 
   const currentLevelXp = player.careerXp - (XP_THRESHOLDS[player.careerLevel - 1] || 0);
   const nextLevelXpThreshold = XP_THRESHOLDS[player.careerLevel] - (XP_THRESHOLDS[player.careerLevel - 1] || 0);
   const isMaxLevel = player.careerLevel >= XP_THRESHOLDS.length - 1;
 
+  const totalFollowers = player.socialMedia.rapGramFollowers + player.socialMedia.rapifyFollowers + player.socialMedia.rapTubeFollowers;
+  const weeklyProfit = (weeklyIncome || 0) - (weeklyExpenses || 0);
 
   return (
     <div className="space-y-6">
@@ -40,10 +45,30 @@ const HomeScreen: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <StatCard icon={<StarIcon className="w-8 h-8"/>} label="Fame" value={`${formatNumber(player.stats.fame)} / 100`} colorClass="text-yellow-400" />
+        <StatCard icon={<StarIcon className="w-8 h-8"/>} label="Fame" value={`${formatNumber(player.stats.fame)} / 100`} colorClass="text-yellow-400" progressValue={player.stats.fame} progressMax={100} />
+        <StatCard icon={<ShieldCheckIcon className="w-8 h-8"/>} label="Reputation" value={`${formatNumber(player.stats.reputation)} / 100`} colorClass="text-purple-400" progressValue={player.stats.reputation} progressMax={100} />
         <StatCard icon={<UserGroupIcon className="w-8 h-8"/>} label="Fans" value={formatNumber(player.stats.fans)} colorClass="text-cyan-400" />
-        <StatCard icon={<ShieldCheckIcon className="w-8 h-8"/>} label="Reputation" value={`${formatNumber(player.stats.reputation)} / 100`} colorClass="text-purple-400" />
-        <StatCard icon={<CashIcon className="w-8 h-8"/>} label="Net Worth" value={`$${formatNumber(player.stats.netWorth)}`} colorClass="text-ios-green" />
+        <StatCard icon={<GlobeIcon className="w-8 h-8"/>} label="Followers" value={formatNumber(totalFollowers)} colorClass="text-blue-400" />
+      </div>
+
+       <div className="ios-card p-4 space-y-2">
+        <h2 className="text-lg font-semibold">Weekly Report</h2>
+        <div className="flex justify-around text-center">
+            <div>
+                <p className="text-sm text-ios-label-secondary">Income</p>
+                <p className="text-lg font-bold text-ios-green">${(weeklyIncome || 0).toFixed(2)}</p>
+            </div>
+            <div>
+                <p className="text-sm text-ios-label-secondary">Expenses</p>
+                <p className="text-lg font-bold text-ios-red">${(weeklyExpenses || 0).toFixed(2)}</p>
+            </div>
+            <div>
+                <p className="text-sm text-ios-label-secondary">Profit/Loss</p>
+                <p className={`text-lg font-bold ${weeklyProfit >= 0 ? 'text-ios-green' : 'text-ios-red'}`}>
+                    {weeklyProfit >= 0 ? `+$${weeklyProfit.toFixed(2)}` : `-$${Math.abs(weeklyProfit).toFixed(2)}`}
+                </p>
+            </div>
+        </div>
       </div>
 
       <div className="ios-card p-4 space-y-2">
